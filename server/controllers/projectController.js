@@ -56,4 +56,12 @@ const deleteProject = async (req, res) => {
   }
 }
 
-module.exports = { createProject, getMyProjects, deleteProject }
+const getAllProjectsAdmin = async (req, res) => {
+  try {
+    const projects = await Project.find({ isArchived: false }).populate('owner', 'name email')
+    return sendSuccess(res, 200, 'All projects fetched', projects)
+  } catch (error) {
+    return sendError(res, 500, 'Server error')
+  }
+}
+module.exports = { createProject, getMyProjects, deleteProject, getAllProjectsAdmin}

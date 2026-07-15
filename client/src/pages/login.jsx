@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { loginUser } from '../services/authService'
@@ -13,7 +14,7 @@ function Login() {
       localStorage.setItem('user', JSON.stringify(result.user))
       navigate('/dashboard')
     } catch (error) {
-      alert(error.response?.data?.message || 'Login failed')
+      toast.error(error.response?.data?.message || 'Login failed')
     }
   }
 
