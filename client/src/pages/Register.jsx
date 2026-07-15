@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { registerUser } from '../services/authService'
@@ -9,10 +10,10 @@ function Register() {
   const onSubmit = async (data) => {
     try {
       await registerUser(data)
-      alert('Registration successful! Please login.')
-      navigate('/login')
+      toast.success('Registration successful! Please login.')
+navigate('/login')
     } catch (error) {
-      alert(error.response?.data?.message || 'Registration failed')
+     toast.error(error.response?.data?.message || 'Registration failed')
     }
   }
 
