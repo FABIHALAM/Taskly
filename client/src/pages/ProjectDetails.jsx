@@ -1,9 +1,9 @@
-import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus, Calendar, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import toast from 'react-hot-toast'
 import DashboardLayout from '../layout/DashboardLayout'
 import CreateTaskModal from '../components/CreateTaskModal'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -16,11 +16,16 @@ function ProjectDetails() {
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState(null)
+  const [priorityFilter, setPriorityFilter] = useState('')
+  const [sortBy, setSortBy] = useState('createdAt')
 
   const fetchTasks = async () => {
     try {
-      const result = await getTasksByProject(id)
-      setTasks(result.data)
+      const filters = { sortBy, order: 'desc' }
+      if (priorityFilter) filters.priority = priorityFilter
+
+      const result = await getTasksByProject(id, filters)
+      setTasks(result.data.tasks || [])
     } catch (error) {
       console.error('Failed to fetch tasks', error)
     } finally {
@@ -30,17 +35,17 @@ function ProjectDetails() {
 
   useEffect(() => {
     fetchTasks()
-  }, [id])
+  }, [id, priorityFilter, sortBy])
 
   const handleCreateTask = async (data) => {
-  try {
-    await createTask(id, data)
-    fetchTasks()
-    toast.success('Task created!')
-  } catch (error) {
-    toast.error(error.response?.data?.message || 'Failed to create task')
+    try {
+      await createTask(id, data)
+      fetchTasks()
+      toast.success('Task created!')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create task')
+    }
   }
-}
 
   const handleDeleteClick = (taskId) => {
     setDeleteTargetId(taskId)
@@ -51,38 +56,33 @@ function ProjectDetails() {
       await deleteTask(deleteTargetId)
       setDeleteTargetId(null)
       fetchTasks()
+      toast.success('Task deleted')
     } catch (error) {
-      console.error('Failed to delete task')
+      toast.error('Failed to delete task')
     }
   }
 
-  // Naya function — jab drag khatam ho
   const handleDragEnd = async (result) => {
     const { destination, source, draggableId } = result
 
-    // Agar bahar drop hua (koi valid column nahi), kuch mat karo
     if (!destination) return
-
-    // Agar wahi jagah wapis drop hua, kuch mat karo
     if (destination.droppableId === source.droppableId && destination.index === source.index) {
       return
     }
 
     const newStatus = destination.droppableId
 
-    // Turant UI update karo (optimistic update — backend response ka wait nahi karna)
     setTasks((prev) =>
       prev.map((task) =>
         task._id === draggableId ? { ...task, status: newStatus } : task
       )
     )
 
-    // Phir backend ko bhi batao
     try {
       await updateTaskStatus(draggableId, newStatus)
     } catch (error) {
       console.error('Failed to update status', error)
-      fetchTasks() // agar fail ho jaye, real data se wapis sync kar do
+      fetchTasks()
     }
   }
 
@@ -121,6 +121,29 @@ function ProjectDetails() {
             <Plus size={18} />
             New Task
           </button>
+        </div>
+
+        <div className="flex items-center gap-3 mb-4">
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            className="text-sm border border-line rounded-lg px-3 py-1.5 bg-surface focus:outline-none"
+          >
+            <option value="">All Priorities</option>
+            <option value="High">High Priority</option>
+            <option value="Medium">Medium Priority</option>
+            <option value="Low">Low Priority</option>
+          </select>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="text-sm border border-line rounded-lg px-3 py-1.5 bg-surface focus:outline-none"
+          >
+            <option value="createdAt">Sort: Newest First</option>
+            <option value="dueDate">Sort: Due Date</option>
+            <option value="title">Sort: Title (A-Z)</option>
+          </select>
         </div>
 
         {isLoading ? (

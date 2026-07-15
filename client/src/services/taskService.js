@@ -1,7 +1,7 @@
 import api from './api'
 
-export const getTasksByProject = async (projectId) => {
-  const response = await api.get(`/tasks/${projectId}`)
+export const getTasksByProject = async (projectId, filters = {}) => {
+  const response = await api.get(`/tasks/${projectId}`, { params: filters })
   return response.data
 }
 

@@ -25,13 +25,35 @@ const createTask = async (req, res) => {
 const getTasksByProject = async (req, res) => {
   try {
     const { projectId } = req.params
+    const { page = 1, limit = 20, sortBy = 'createdAt', order = 'desc', status, priority } = req.query
 
-    const tasks = await Task.find({
-      project: projectId,
-      isArchived: false,
-    }).sort({ createdAt: -1 })
+    // Query object banate hain — base filters
+    const query = { project: projectId, isArchived: false }
 
-    return sendSuccess(res, 200, 'Tasks fetched successfully', tasks)
+    // Agar status filter diya gaya ho, add karo
+    if (status) query.status = status
+
+    // Agar priority filter diya gaya ho, add karo
+    if (priority) query.priority = priority
+
+    // Sorting direction: -1 = descending (naya pehle), 1 = ascending (purana pehle)
+    const sortOrder = order === 'asc' ? 1 : -1
+
+    const tasks = await Task.find(query)
+      .sort({ [sortBy]: sortOrder })
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+
+    const totalTasks = await Task.countDocuments(query)
+
+    return sendSuccess(res, 200, 'Tasks fetched successfully', {
+      tasks,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalTasks / limit),
+        totalTasks,
+      },
+    })
   } catch (error) {
     return sendError(res, 500, 'Server error')
   }
