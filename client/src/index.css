@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --color-ink: #12121a;
+  --color-canvas: #f2f0ea;
+  --color-surface: #ffffff;
+  --color-sidebar: #12121a;
+  --color-primary: #2c4bff;
+  --color-primary-soft: #e8ecff;
+  --color-brass: #c08a2e;
+  --color-mint: #2e9e6d;
+  --color-line: #e4e1d8;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
