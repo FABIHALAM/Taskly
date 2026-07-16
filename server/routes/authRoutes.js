@@ -17,7 +17,57 @@ const loginValidation = [
 ]
 
 router.get('/me', protect, getMyProfile)
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Validation error or user already exists
+ */
 router.post('/register', registerValidation, validateRequest, registerUser)
+router.post('/register', registerValidation, validateRequest, registerUser)
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login a user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful, returns JWT token
+ *       400:
+ *         description: Invalid credentials
+ */
+router.post('/login', loginValidation, validateRequest, loginUser)
 router.post('/login', loginValidation, validateRequest, loginUser)
 
 module.exports = router
