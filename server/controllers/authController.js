@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
+const { sendSuccess, sendError } = require('../utils/response')
 
 const registerUser = async (req, res) => {
   try {
@@ -8,7 +9,7 @@ const registerUser = async (req, res) => {
 
     const existingUser = await User.findOne({ email })
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' })
+      return sendError(res, 400, 'User already exists')
     }
 
     const salt = await bcrypt.genSalt(10)
@@ -20,16 +21,13 @@ const registerUser = async (req, res) => {
       password: hashedPassword,
     })
 
-    res.status(201).json({
-      message: 'User registered successfully',
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-      },
+    return sendSuccess(res, 201, 'User registered successfully', {
+      id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
     })
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
+    return sendError(res, 500, 'Server error')
   }
 }
 
@@ -39,12 +37,12 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email })
     if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' })
+      return sendError(res, 400, 'Invalid email or password')
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid email or password' })
+      return sendError(res, 400, 'Invalid email or password')
     }
 
     const token = jwt.sign(
@@ -53,8 +51,7 @@ const loginUser = async (req, res) => {
       { expiresIn: '7d' }
     )
 
-    res.status(200).json({
-      message: 'Login successful',
+    return sendSuccess(res, 200, 'Login successful', {
       token,
       user: {
         id: user._id,
@@ -63,16 +60,17 @@ const loginUser = async (req, res) => {
       },
     })
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
+    return sendError(res, 500, 'Server error')
   }
 }
 
 const getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password')
-    res.status(200).json(user)
+    return sendSuccess(res, 200, 'Profile fetched successfully', user)
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
+    return sendError(res, 500, 'Server error')
   }
 }
+
 module.exports = { registerUser, loginUser, getMyProfile }
