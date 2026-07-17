@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --testEnvironment node --detectOpenHandles --forceExit",
+    "test:watch": "jest --watch"
   },
   "keywords": [],
   "author": "",
@@ -19,5 +20,10 @@
     "mongoose": "^9.7.4",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0",
+    "mongodb-memory-server": "^10.1.4"
   }
 }
