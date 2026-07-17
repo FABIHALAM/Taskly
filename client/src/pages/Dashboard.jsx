@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { FolderKanban, Clock, CheckCircle2 } from 'lucide-react'
 import DashboardLayout from '../layout/DashboardLayout'
+import { getRecentActivity } from '../services/activityService'
 
 function Dashboard() {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -7,6 +9,26 @@ function Dashboard() {
 
   const circumference = 2 * Math.PI * 34
   const offset = circumference - (weeklyProgress / 100) * circumference
+
+  const [activities, setActivities] = useState([])
+
+  useEffect(() => {
+    const fetchActivity = async () => {
+      try {
+        const result = await getRecentActivity()
+        setActivities(result.data)
+      } catch (error) {
+        console.error('Failed to fetch activity', error)
+      }
+    }
+    fetchActivity()
+  }, [])
+
+  const actionLabels = {
+    task_created: 'created a task',
+    task_status_changed: 'updated a task status',
+    task_deleted: 'deleted a task',
+  }
 
   const stats = [
     { label: 'Active Projects', value: '0', icon: FolderKanban, color: 'text-primary' },
@@ -69,6 +91,28 @@ function Dashboard() {
           <button className="mt-4 bg-primary text-white text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
             Create Project
           </button>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-surface border border-line rounded-2xl p-6 mt-6">
+          <h3 className="font-display font-semibold mb-4">Recent Activity</h3>
+          {activities.length === 0 ? (
+            <p className="text-sm text-gray-400">No recent activity yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {activities.map((log) => (
+                <div key={log._id} className="flex items-center gap-3 text-sm">
+                  <span>
+                    <span className="font-medium">{log.performedBy?.name || 'Someone'}</span>
+                    {' '}{actionLabels[log.action] || log.action}
+                  </span>
+                  <span className="text-xs text-gray-400 font-mono ml-auto">
+                    {new Date(log.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>
