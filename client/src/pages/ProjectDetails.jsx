@@ -24,10 +24,20 @@ function ProjectDetails() {
       const filters = { sortBy, order: 'desc' }
       if (priorityFilter) filters.priority = priorityFilter
 
+
+      console.log('Sending filters:', filters)
+
+
       const result = await getTasksByProject(id, filters)
       setTasks(result.data.tasks || [])
+
+
+      console.log('Received tasks count:', result.data.tasks?.length)
+
+      
     } catch (error) {
       console.error('Failed to fetch tasks', error)
+      setTasks([])
     } finally {
       setIsLoading(false)
     }

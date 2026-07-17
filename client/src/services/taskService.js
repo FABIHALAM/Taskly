@@ -1,7 +1,8 @@
 import api from './api'
 
 export const getTasksByProject = async (projectId, filters = {}) => {
-  const response = await api.get(`/tasks/${projectId}`, { params: filters })
+  const queryParams = new URLSearchParams(filters).toString()
+  const response = await api.get(`/tasks/${projectId}?${queryParams}`)
   return response.data
 }
 
