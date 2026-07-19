@@ -25,11 +25,19 @@ const createTask = async (req, res) => {
   }
 }
 
-// Get all tasks for a specific project (with pagination, sorting, filtering)
+// Get all tasks for a specific project (with pagination, sorting, filtering, search)
 const getTasksByProject = async (req, res) => {
   try {
     const { projectId } = req.params
-    const { page = 1, limit = 20, sortBy = 'createdAt', order = 'desc', status, priority, search } = req.query
+    const {
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      order = 'desc',
+      status,
+      priority,
+      search,
+    } = req.query
 
     const query = { project: projectId, isArchived: false }
 
@@ -60,7 +68,7 @@ const getTasksByProject = async (req, res) => {
   }
 }
 
-// Update a task (title, description, priority, dueDate, assignee, status)
+// Update any field of a task (title, description, priority, dueDate, assignee, status)
 const updateTask = async (req, res) => {
   try {
     const { taskId } = req.params
@@ -78,11 +86,10 @@ const updateTask = async (req, res) => {
     if (assignee !== undefined) updatedFields.assignee = assignee
     if (status !== undefined) updatedFields.status = status
 
-    const updatedTask = await Task.findByIdAndUpdate(
-      taskId,
-      updatedFields,
-      { new: true, runValidators: true }
-    ).populate('assignee', 'name email')
+    const updatedTask = await Task.findByIdAndUpdate(taskId, updatedFields, {
+      new: true,
+      runValidators: true,
+    }).populate('assignee', 'name email')
 
     await logActivity('task_updated', req.userId, 'Task', taskId)
 
@@ -98,12 +105,7 @@ const updateTaskStatus = async (req, res) => {
     const { taskId } = req.params
     const { status } = req.body
 
-    const task = await Task.findByIdAndUpdate(
-      taskId,
-      { status },
-      { new: true }
-    )
-
+    const task = await Task.findByIdAndUpdate(taskId, { status }, { new: true })
     if (!task) return sendError(res, 404, 'Task not found')
 
     await logActivity('task_status_changed', req.userId, 'Task', taskId)
