@@ -79,7 +79,8 @@ describe('Auth Endpoints', () => {
       })
 
     expect(res.statusCode).toBe(200)
-    expect(res.body.data.token).toBeDefined()
+    expect(res.body.data.accessToken).toBeDefined()
+    expect(res.body.data.refreshToken).toBeDefined()
   })
 
   test('should reject login with wrong password', async () => {

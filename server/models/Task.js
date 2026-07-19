@@ -35,6 +35,13 @@ const taskSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-}, { timestamps: true })
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } })
+
+// Virtual field: isOverdue
+// True when dueDate has passed AND task is not yet Done
+taskSchema.virtual('isOverdue').get(function () {
+  if (!this.dueDate || this.status === 'Done') return false
+  return new Date() > this.dueDate
+})
 
 module.exports = mongoose.model('Task', taskSchema)

@@ -1,6 +1,7 @@
 const Task = require('../models/Task')
 const { sendSuccess, sendError } = require('../utils/response')
 const logActivity = require('../utils/logActivity')
+const { createNotification } = require('./notificationController')
 
 // Create a new task inside a project
 const createTask = async (req, res) => {
@@ -18,6 +19,17 @@ const createTask = async (req, res) => {
     })
 
     await logActivity('task_created', req.userId, 'Task', task._id)
+
+    // Notify assignee if someone else created and assigned this task
+    if (assignee && assignee.toString() !== req.userId) {
+      await createNotification(
+        'task_assigned',
+        assignee,
+        'Task',
+        task._id,
+        `You have been assigned a new task: "${title}"`
+      )
+    }
 
     return sendSuccess(res, 201, 'Task created successfully', task)
   } catch (error) {
@@ -92,6 +104,17 @@ const updateTask = async (req, res) => {
     }).populate('assignee', 'name email')
 
     await logActivity('task_updated', req.userId, 'Task', taskId)
+
+    // Notify new assignee if changed
+    if (assignee && assignee.toString() !== req.userId) {
+      await createNotification(
+        'task_assigned',
+        assignee,
+        'Task',
+        taskId,
+        `You have been assigned a task: "${updatedTask.title}"`
+      )
+    }
 
     return sendSuccess(res, 200, 'Task updated successfully', updatedTask)
   } catch (error) {

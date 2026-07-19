@@ -1,6 +1,7 @@
 const Comment = require('../models/Comment')
 const Task = require('../models/Task')
 const { sendSuccess, sendError } = require('../utils/response')
+const { createNotification } = require('./notificationController')
 
 // ─── Controllers ─────────────────────────────────────────────────────────────
 
@@ -28,6 +29,17 @@ const addComment = async (req, res) => {
 
     // Return comment with author details populated
     const populated = await comment.populate('author', 'name email')
+
+    // Notify task assignee if someone else comments
+    if (task.assignee && task.assignee.toString() !== req.userId) {
+      await createNotification(
+        'comment_added',
+        task.assignee,
+        'Comment',
+        comment._id,
+        `New comment on your task: "${task.title}"`
+      )
+    }
 
     return sendSuccess(res, 201, 'Comment added successfully', populated)
   } catch (error) {

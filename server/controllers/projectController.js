@@ -2,6 +2,7 @@ const Project = require('../models/project')
 const User = require('../models/User')
 const { sendSuccess, sendError } = require('../utils/response')
 const logActivity = require('../utils/logActivity')
+const { createNotification } = require('./notificationController')
 
 // Create a new project
 const createProject = async (req, res) => {
@@ -99,6 +100,15 @@ const addMember = async (req, res) => {
     await project.save()
 
     await logActivity('member_added', req.userId, 'Project', id)
+
+    // Notify the new member
+    await createNotification(
+      'member_added',
+      userId,
+      'Project',
+      id,
+      `You have been added to project: "${project.name}"`
+    )
 
     const updated = await Project.findById(id).populate('members', 'name email')
     return sendSuccess(res, 200, 'Member added successfully', updated)
