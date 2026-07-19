@@ -20,4 +20,14 @@ body {
   font-family: var(--font-body);
   background-color: var(--color-canvas);
   color: var(--color-ink);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dark {
+  --color-ink: #f5f6f8;
+  --color-canvas: #0c0d12;
+  --color-surface: #15161f;
+  --color-sidebar: #09090d;
+  --color-line: #222330;
+  --color-primary-soft: #171b33;
 }

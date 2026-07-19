@@ -98,6 +98,11 @@ router.get('/:taskId', protect, getCommentsByTask)
  *         description: Comment updated
  *       403:
  *         description: Not the author
+ */
+router.put('/edit/:commentId', protect, commentValidation, validateRequest, updateComment)
+
+/**
+ * @swagger
  * /comments/edit/{commentId}:
  *   delete:
  *     summary: Delete a comment (author only)
@@ -116,7 +121,6 @@ router.get('/:taskId', protect, getCommentsByTask)
  *       403:
  *         description: Not the author
  */
-router.put('/edit/:commentId', protect, commentValidation, validateRequest, updateComment)
 router.delete('/edit/:commentId', protect, deleteComment)
 
 module.exports = router

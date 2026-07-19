@@ -189,14 +189,22 @@ function ProjectDetails() {
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                   style={provided.draggableProps.style}
-                                  className={`bg-canvas border border-line rounded-lg p-3 transition-shadow ${
+                                  className={`bg-canvas border rounded-lg p-3 transition-shadow cursor-pointer relative ${
+                                    task.isOverdue || (task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done')
+                                      ? 'border-red-300 bg-red-50/30 dark:border-red-900/50 dark:bg-red-950/10'
+                                      : 'border-line'
+                                  } ${
                                     snapshot.isDragging ? 'shadow-lg rotate-2' : 'hover:shadow-sm'
                                   }`}
+                                  onClick={() => navigate(`/projects/${id}/tasks/${task._id}`)}
                                 >
                                   <div className="flex items-start justify-between">
                                     <p className="text-sm font-medium">{task.title}</p>
                                     <button
-                                      onClick={() => handleDeleteClick(task._id)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteClick(task._id);
+                                      }}
                                       className="text-gray-300 hover:text-red-500 transition-colors shrink-0 ml-2"
                                     >
                                       <Trash2 size={13} />
@@ -207,7 +215,11 @@ function ProjectDetails() {
                                       {task.priority}
                                     </span>
                                     {task.dueDate && (
-                                      <div className="flex items-center gap-1 text-gray-400">
+                                      <div className={`flex items-center gap-1 ${
+                                        task.isOverdue || (task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done')
+                                          ? 'text-red-500 font-semibold'
+                                          : 'text-gray-400'
+                                      }`}>
                                         <Calendar size={12} />
                                         <span className="text-xs font-mono">
                                           {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

@@ -1,4 +1,8 @@
 require('dotenv').config()
+// Ensure required env vars exist for tests
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-for-jest-only'
+process.env.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test-refresh-secret-for-jest-only'
+
 const request = require('supertest')
 const mongoose = require('mongoose')
 const { MongoMemoryServer } = require('mongodb-memory-server')

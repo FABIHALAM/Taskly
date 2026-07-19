@@ -20,3 +20,13 @@ export const updateTaskStatus = async (taskId, status) => {
   const response = await api.patch(`/tasks/${taskId}/status`, { status })
   return response.data
 }
+
+export const updateTask = async (taskId, data) => {
+  const response = await api.put(`/tasks/${taskId}`, data)
+  return response.data
+}
+
+export const getTaskById = async (taskId) => {
+  const response = await api.get(`/tasks/${taskId}`)
+  return response.data
+}
