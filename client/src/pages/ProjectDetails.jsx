@@ -18,6 +18,7 @@ function ProjectDetails() {
   const [deleteTargetId, setDeleteTargetId] = useState(null)
   const [priorityFilter, setPriorityFilter] = useState('')
   const [sortBy, setSortBy] = useState('createdAt')
+  const [viewMode, setViewMode] = useState('board')
 
   const fetchTasks = async () => {
     try {
@@ -108,6 +109,20 @@ function ProjectDetails() {
     Low: 'bg-gray-100 text-gray-500',
   }
 
+  const getTimelineDates = () => {
+    const dates = []
+    const start = new Date()
+    start.setDate(start.getDate() - 3)
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(start)
+      d.setDate(start.getDate() + i)
+      dates.push(d)
+    }
+    return dates
+  }
+
+  const timelineDates = getTimelineDates()
+
   return (
     <DashboardLayout>
       <div className="max-w-6xl">
@@ -154,11 +169,30 @@ function ProjectDetails() {
             <option value="dueDate">Sort: Due Date</option>
             <option value="title">Sort: Title (A-Z)</option>
           </select>
+
+          <div className="flex items-center gap-1 bg-surface border border-line rounded-lg p-0.5 ml-auto">
+            <button
+              onClick={() => setViewMode('board')}
+              className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
+                viewMode === 'board' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-ink'
+              }`}
+            >
+              Board View
+            </button>
+            <button
+              onClick={() => setViewMode('timeline')}
+              className={`text-xs px-3 py-1.5 rounded-md font-medium transition-colors ${
+                viewMode === 'timeline' ? 'bg-primary text-white shadow-sm' : 'text-gray-500 hover:text-ink'
+              }`}
+            >
+              Timeline View
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
           <p className="text-sm text-gray-500">Loading tasks...</p>
-        ) : (
+        ) : viewMode === 'board' ? (
           <DragDropContext onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-3 gap-4">
               {columns.map((col) => {
@@ -210,6 +244,18 @@ function ProjectDetails() {
                                       <Trash2 size={13} />
                                     </button>
                                   </div>
+                                  {task.tags && task.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                      {task.tags.map((tag) => (
+                                        <span
+                                          key={tag}
+                                          className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/10 tracking-wider uppercase"
+                                        >
+                                          {tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
                                   <div className="flex items-center justify-between mt-3">
                                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${priorityColor[task.priority]}`}>
                                       {task.priority}
@@ -244,6 +290,103 @@ function ProjectDetails() {
               })}
             </div>
           </DragDropContext>
+        ) : (
+          <div className="bg-surface border border-line rounded-2xl p-6 overflow-x-auto shadow-sm">
+            <div className="min-w-[800px]">
+              {/* Header dates */}
+              <div className="grid grid-cols-12 gap-2 pb-3 border-b border-line mb-4 text-xs font-semibold text-gray-400 uppercase">
+                <div className="col-span-3">Task Title</div>
+                <div className="col-span-9 grid grid-cols-14 gap-1 text-center font-mono">
+                  {timelineDates.map((date) => {
+                    const isToday = date.toDateString() === new Date().toDateString()
+                    return (
+                      <div
+                        key={date.toISOString()}
+                        className={`py-1 rounded ${isToday ? 'bg-primary text-white font-bold' : ''}`}
+                      >
+                        <p className="text-[9px]">{date.toLocaleDateString('en-US', { weekday: 'narrow' })}</p>
+                        <p className="text-xs">{date.getDate()}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Rows */}
+              {tasks.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">No tasks found</p>
+              ) : (
+                <div className="space-y-3">
+                  {tasks.map((task) => {
+                    const startDay = new Date(task.createdAt)
+                    startDay.setHours(0,0,0,0)
+                    
+                    const endDay = task.dueDate ? new Date(task.dueDate) : new Date(task.createdAt)
+                    endDay.setHours(23,59,59,999)
+
+                    const dayMs = 24 * 60 * 60 * 1000
+                    const timelineStartMs = timelineDates[0].getTime()
+                    
+                    let startCol = Math.floor((startDay.getTime() - timelineStartMs) / dayMs)
+                    let endCol = Math.floor((endDay.getTime() - timelineStartMs) / dayMs)
+
+                    if (startCol < 0) startCol = 0
+                    if (startCol > 13) startCol = 13
+                    if (endCol < 0) endCol = 0
+                    if (endCol > 13) endCol = 13
+                    if (endCol < startCol) endCol = startCol
+
+                    const colSpan = endCol - startCol + 1
+                    const isOverdue = task.isOverdue || (task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done')
+
+                    return (
+                      <div
+                        key={task._id}
+                        onClick={() => navigate(`/projects/${id}/tasks/${task._id}`)}
+                        className="grid grid-cols-12 gap-2 items-center py-2 border-b border-line hover:bg-canvas/50 rounded-lg px-2 cursor-pointer transition-colors"
+                      >
+                        <div className="col-span-3 truncate pr-2">
+                          <p className="text-sm font-semibold truncate text-ink">{task.title}</p>
+                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                            task.status === 'Done'
+                              ? 'bg-green-100 text-green-600'
+                              : task.status === 'In Progress'
+                              ? 'bg-blue-100 text-blue-600'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            {task.status}
+                          </span>
+                        </div>
+
+                        <div className="col-span-9 grid grid-cols-14 gap-1 relative h-8 items-center">
+                          <div
+                            style={{
+                              gridColumnStart: startCol + 1,
+                              gridColumnEnd: `span ${colSpan}`,
+                            }}
+                            className={`h-6 rounded-md shadow-sm text-[10px] text-white flex items-center justify-between px-2 font-medium truncate transition-transform hover:scale-[1.01] ${
+                              task.status === 'Done'
+                                ? 'bg-mint'
+                                : isOverdue
+                                ? 'bg-red-500'
+                                : 'bg-primary'
+                            }`}
+                          >
+                            <span className="truncate">{task.title}</span>
+                            {task.dueDate && (
+                              <span className="text-[8px] opacity-90 font-mono shrink-0 ml-1">
+                                {new Date(task.dueDate).getDate()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
 

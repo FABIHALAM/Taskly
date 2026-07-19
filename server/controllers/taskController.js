@@ -6,7 +6,7 @@ const { createNotification } = require('./notificationController')
 // Create a new task inside a project
 const createTask = async (req, res) => {
   try {
-    const { title, description, priority, dueDate, assignee } = req.body
+    const { title, description, priority, dueDate, assignee, tags } = req.body
     const { projectId } = req.params
 
     const task = await Task.create({
@@ -16,6 +16,7 @@ const createTask = async (req, res) => {
       dueDate,
       assignee: assignee || null,
       project: projectId,
+      tags: tags || [],
     })
 
     await logActivity('task_created', req.userId, 'Task', task._id)
@@ -84,7 +85,7 @@ const getTasksByProject = async (req, res) => {
 const updateTask = async (req, res) => {
   try {
     const { taskId } = req.params
-    const { title, description, priority, dueDate, assignee, status } = req.body
+    const { title, description, priority, dueDate, assignee, status, tags } = req.body
 
     const task = await Task.findById(taskId)
     if (!task) return sendError(res, 404, 'Task not found')
@@ -97,6 +98,7 @@ const updateTask = async (req, res) => {
     if (dueDate !== undefined) updatedFields.dueDate = dueDate
     if (assignee !== undefined) updatedFields.assignee = assignee
     if (status !== undefined) updatedFields.status = status
+    if (tags !== undefined) updatedFields.tags = tags
 
     const updatedTask = await Task.findByIdAndUpdate(taskId, updatedFields, {
       new: true,

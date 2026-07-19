@@ -6,7 +6,16 @@ function CreateTaskModal({ isOpen, onClose, onCreate }) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm()
 
   const onSubmit = (data) => {
-    onCreate(data)
+    const tags = data.tagsInput
+      ? data.tagsInput.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+      : []
+    onCreate({
+      title: data.title,
+      description: data.description || '',
+      priority: data.priority,
+      dueDate: data.dueDate,
+      tags,
+    })
     reset()
     onClose()
   }
@@ -45,6 +54,25 @@ function CreateTaskModal({ isOpen, onClose, onCreate }) {
                 {errors.title && (
                   <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
                 )}
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <textarea
+                  {...register('description')}
+                  className="w-full border border-line rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  rows={2}
+                  placeholder="Describe the task..."
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Tags (comma-separated)</label>
+                <input
+                  {...register('tagsInput')}
+                  className="w-full border border-line rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="e.g. frontend, bug, docs"
+                />
               </div>
 
               <div className="mb-4">

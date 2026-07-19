@@ -47,6 +47,7 @@ function TaskDetail() {
         priority: found.priority,
         status: found.status,
         dueDate: found.dueDate ? new Date(found.dueDate).toISOString().split('T')[0] : '',
+        tagsInput: found.tags ? found.tags.join(', ') : '',
       })
     } catch { toast.error('Failed to load task') }
     finally { setIsLoading(false) }
@@ -63,7 +64,17 @@ function TaskDetail() {
 
   const handleSave = async () => {
     try {
-      await updateTask(taskId, editData)
+      const tags = editData.tagsInput
+        ? editData.tagsInput.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+        : []
+      await updateTask(taskId, {
+        title: editData.title,
+        description: editData.description,
+        priority: editData.priority,
+        status: editData.status,
+        dueDate: editData.dueDate,
+        tags,
+      })
       toast.success('Task updated!')
       setIsEditing(false)
       loadTask()
@@ -207,6 +218,35 @@ function TaskDetail() {
               />
             ) : (
               <p className="text-sm text-gray-600">{task.description || <span className="text-gray-400 italic">No description added.</span>}</p>
+            )}
+          </div>
+
+          {/* Tags */}
+          <div className="mb-5 pt-3 border-t border-line">
+            <label className="text-xs text-gray-400 font-medium mb-1 block">Tags</label>
+            {isEditing ? (
+              <input
+                type="text"
+                placeholder="e.g. frontend, bug, api"
+                value={editData.tagsInput || ''}
+                onChange={(e) => setEditData({ ...editData, tagsInput: e.target.value })}
+                className="w-full text-sm border border-line rounded-lg px-3 py-2 bg-canvas focus:outline-none"
+              />
+            ) : (
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {task.tags && task.tags.length > 0 ? (
+                  task.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors uppercase tracking-wider"
+                    >
+                      {tag}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-gray-400 italic">No tags added.</span>
+                )}
+              </div>
             )}
           </div>
 

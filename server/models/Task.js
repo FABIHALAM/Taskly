@@ -31,6 +31,9 @@ const taskSchema = new mongoose.Schema({
   dueDate: {
     type: Date,
   },
+  tags: [{
+    type: String,
+  }],
   isArchived: {
     type: Boolean,
     default: false,
