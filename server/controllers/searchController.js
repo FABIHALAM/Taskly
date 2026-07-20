@@ -17,7 +17,7 @@ const globalSearch = async (req, res) => {
 
     // Get user's accessible project IDs
     const accessibleProjects = await Project.find({
-      $or: [{ owner: req.userId }, { members: req.userId }],
+      $or: [{ owner: req.userId }, { 'members.user': req.userId }],
       isArchived: false,
     }).select('_id name')
 

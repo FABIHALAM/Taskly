@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Calendar, User, Flag, Trash2, Edit3, Send, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Calendar, User, Flag, Trash2, Edit3, Send, AlertTriangle, Sparkles, CheckCircle2, Tag } from 'lucide-react'
 import toast from 'react-hot-toast'
 import DashboardLayout from '../layout/DashboardLayout'
 import { getTasksByProject, updateTask, deleteTask } from '../services/taskService'
@@ -10,15 +10,15 @@ const STATUSES = ['To Do', 'In Progress', 'Done']
 const PRIORITIES = ['Low', 'Medium', 'High']
 
 const priorityColors = {
-  High: 'bg-red-100 text-red-600',
-  Medium: 'bg-yellow-100 text-yellow-600',
-  Low: 'bg-gray-100 text-gray-500',
+  High: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+  Medium: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+  Low: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
 }
 
 const statusColors = {
-  'To Do': 'bg-gray-100 text-gray-600',
-  'In Progress': 'bg-blue-100 text-blue-600',
-  Done: 'bg-green-100 text-green-600',
+  'To Do': 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border border-slate-500/20',
+  'In Progress': 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20',
+  Done: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
 }
 
 function TaskDetail() {
@@ -75,7 +75,7 @@ function TaskDetail() {
         dueDate: editData.dueDate,
         tags,
       })
-      toast.success('Task updated!')
+      toast.success('Task updated successfully!')
       setIsEditing(false)
       loadTask()
     } catch { toast.error('Failed to update task') }
@@ -87,7 +87,7 @@ function TaskDetail() {
       await deleteTask(taskId)
       toast.success('Task deleted')
       navigate(`/projects/${projectId}`)
-    } catch { toast.error('Failed to delete') }
+    } catch { toast.error('Failed to delete task') }
   }
 
   const handleAddComment = async (e) => {
@@ -109,52 +109,62 @@ function TaskDetail() {
     } catch { toast.error('Failed to delete comment') }
   }
 
-  if (isLoading) return <DashboardLayout><p className="text-sm text-gray-400">Loading...</p></DashboardLayout>
+  if (isLoading) return (
+    <DashboardLayout>
+      <div className="flex flex-col items-center justify-center h-64 gap-2 text-xs text-slate-400">
+        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        Loading task details...
+      </div>
+    </DashboardLayout>
+  )
+
   if (!task) return null
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done'
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Back */}
         <button
           onClick={() => navigate(`/projects/${projectId}`)}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-ink mb-5 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-ink transition-colors cursor-pointer"
         >
-          <ArrowLeft size={16} /> Back to Board
+          <ArrowLeft size={15} /> Back to Project Board
         </button>
 
         {/* Overdue Warning */}
         {isOverdue && (
-          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 mb-5 text-sm">
-            <AlertTriangle size={16} />
-            <span>This task is <strong>overdue</strong>! Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+          <div className="flex items-center gap-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-2xl px-5 py-3.5 text-xs font-bold shadow-sm">
+            <AlertTriangle size={18} className="animate-pulse" />
+            <span>Task Overdue: Scheduled due date was {new Date(task.dueDate).toLocaleDateString()}</span>
           </div>
         )}
 
-        {/* Task Header */}
-        <div className="bg-surface border border-line rounded-2xl p-6 mb-5">
-          <div className="flex items-start justify-between gap-4 mb-4">
+        {/* Task Detail Card */}
+        <div className="bg-surface border border-line rounded-3xl p-7 shadow-sm">
+          <div className="flex items-start justify-between gap-4 mb-5">
             {isEditing ? (
               <input
-                className="flex-1 text-xl font-semibold font-display border-b border-primary focus:outline-none bg-transparent"
+                className="flex-1 text-2xl font-extrabold font-display border-b-2 border-indigo-500 focus:outline-none bg-transparent text-ink"
                 value={editData.title}
                 onChange={(e) => setEditData({ ...editData, title: e.target.value })}
               />
             ) : (
-              <h1 className="font-display text-xl font-semibold flex-1">{task.title}</h1>
+              <h1 className="font-display text-2xl font-extrabold text-ink flex-1 leading-snug">{task.title}</h1>
             )}
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="p-1.5 rounded-lg hover:bg-canvas text-gray-400 hover:text-ink transition-colors"
+                className="p-2 rounded-xl border border-line bg-canvas hover:border-indigo-500/30 text-slate-400 hover:text-ink transition-all cursor-pointer"
+                title="Edit Task"
               >
                 <Edit3 size={16} />
               </button>
               <button
                 onClick={handleDelete}
-                className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                className="p-2 rounded-xl border border-line bg-canvas hover:border-rose-500/30 text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
+                title="Delete Task"
               >
                 <Trash2 size={16} />
               </button>
@@ -162,20 +172,20 @@ function TaskDetail() {
           </div>
 
           {/* Status + Priority + Due Date */}
-          <div className="flex flex-wrap gap-3 mb-5">
+          <div className="flex flex-wrap items-center gap-3 mb-6">
             {isEditing ? (
               <>
                 <select
                   value={editData.status}
                   onChange={(e) => setEditData({ ...editData, status: e.target.value })}
-                  className="text-sm border border-line rounded-lg px-3 py-1.5 bg-canvas focus:outline-none"
+                  className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none"
                 >
                   {STATUSES.map(s => <option key={s}>{s}</option>)}
                 </select>
                 <select
                   value={editData.priority}
                   onChange={(e) => setEditData({ ...editData, priority: e.target.value })}
-                  className="text-sm border border-line rounded-lg px-3 py-1.5 bg-canvas focus:outline-none"
+                  className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none"
                 >
                   {PRIORITIES.map(p => <option key={p}>{p}</option>)}
                 </select>
@@ -183,22 +193,21 @@ function TaskDetail() {
                   type="date"
                   value={editData.dueDate}
                   onChange={(e) => setEditData({ ...editData, dueDate: e.target.value })}
-                  className="text-sm border border-line rounded-lg px-3 py-1.5 bg-canvas focus:outline-none"
+                  className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none"
                 />
               </>
             ) : (
               <>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${statusColors[task.status]}`}>
+                <span className={`text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider ${statusColors[task.status]}`}>
                   {task.status}
                 </span>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${priorityColors[task.priority]}`}>
-                  <Flag size={10} className="inline mr-1" />{task.priority}
+                <span className={`text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider ${priorityColors[task.priority]}`}>
+                  <Flag size={11} className="inline mr-1" />{task.priority} Priority
                 </span>
                 {task.dueDate && (
-                  <span className={`flex items-center gap-1 text-xs px-3 py-1 rounded-full font-medium ${isOverdue ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                    <Calendar size={10} />
+                  <span className={`flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-bold ${isOverdue ? 'bg-rose-500/10 text-rose-500' : 'bg-slate-500/10 text-slate-400'}`}>
+                    <Calendar size={11} />
                     {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    {isOverdue && ' — OVERDUE'}
                   </span>
                 )}
               </>
@@ -206,45 +215,49 @@ function TaskDetail() {
           </div>
 
           {/* Description */}
-          <div className="mb-4">
-            <label className="text-xs text-gray-400 font-medium mb-1 block">Description</label>
+          <div className="mb-6">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Description</label>
             {isEditing ? (
               <textarea
                 rows={4}
                 value={editData.description}
                 onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                placeholder="Add a description..."
-                className="w-full text-sm border border-line rounded-xl px-3 py-2 bg-canvas focus:outline-none resize-none"
+                placeholder="Add task description..."
+                className="w-full text-xs font-medium border border-line rounded-2xl px-4 py-3 bg-canvas text-ink focus:outline-none resize-none"
               />
             ) : (
-              <p className="text-sm text-gray-600">{task.description || <span className="text-gray-400 italic">No description added.</span>}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-canvas p-4 rounded-2xl border border-line">
+                {task.description || <span className="text-slate-400 italic">No description provided for this task.</span>}
+              </p>
             )}
           </div>
 
           {/* Tags */}
-          <div className="mb-5 pt-3 border-t border-line">
-            <label className="text-xs text-gray-400 font-medium mb-1 block">Tags</label>
+          <div className="mb-6 pt-4 border-t border-line">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block flex items-center gap-1">
+              <Tag size={12} /> Tags
+            </label>
             {isEditing ? (
               <input
                 type="text"
-                placeholder="e.g. frontend, bug, api"
+                placeholder="frontend, bug, api"
                 value={editData.tagsInput || ''}
                 onChange={(e) => setEditData({ ...editData, tagsInput: e.target.value })}
-                className="w-full text-sm border border-line rounded-lg px-3 py-2 bg-canvas focus:outline-none"
+                className="w-full text-xs font-medium border border-line rounded-xl px-4 py-2.5 bg-canvas text-ink focus:outline-none"
               />
             ) : (
-              <div className="flex flex-wrap gap-1.5 mt-1">
+              <div className="flex flex-wrap gap-2">
                 {task.tags && task.tags.length > 0 ? (
                   task.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors uppercase tracking-wider"
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 uppercase tracking-wider"
                     >
                       {tag}
                     </span>
                   ))
                 ) : (
-                  <span className="text-xs text-gray-400 italic">No tags added.</span>
+                  <span className="text-xs text-slate-400 italic">No tags added.</span>
                 )}
               </div>
             )}
@@ -252,24 +265,24 @@ function TaskDetail() {
 
           {/* Assignee */}
           {task.assignee && (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <User size={14} />
-              <span>Assigned to <span className="font-medium text-ink">{task.assignee.name || task.assignee}</span></span>
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 bg-canvas px-4 py-2.5 rounded-xl border border-line w-fit">
+              <User size={14} className="text-indigo-500" />
+              <span>Assigned to: <span className="text-ink font-bold">{task.assignee.name || task.assignee}</span></span>
             </div>
           )}
 
           {/* Save / Cancel */}
           {isEditing && (
-            <div className="flex gap-2 mt-5">
+            <div className="flex gap-3 mt-6">
               <button
                 onClick={handleSave}
-                className="bg-primary text-white text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
               >
                 Save Changes
               </button>
               <button
                 onClick={() => setIsEditing(false)}
-                className="text-sm text-gray-500 px-4 py-2 rounded-lg hover:bg-canvas transition-colors"
+                className="text-xs font-bold text-slate-400 px-5 py-2.5 rounded-xl hover:bg-canvas transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -277,28 +290,28 @@ function TaskDetail() {
           )}
         </div>
 
-        {/* Comments Section — SRS Phase 4 */}
-        <div className="bg-surface border border-line rounded-2xl p-6">
-          <h2 className="font-display font-semibold mb-4">
-            Comments <span className="text-gray-400 font-normal text-sm">({comments.length})</span>
+        {/* Comments Section */}
+        <div className="bg-surface border border-line rounded-3xl p-7 shadow-sm">
+          <h2 className="font-display font-bold text-lg text-ink mb-5">
+            Comments Thread <span className="text-slate-400 font-normal text-xs">({comments.length})</span>
           </h2>
 
           {/* Add Comment */}
-          <form onSubmit={handleAddComment} className="flex gap-3 mb-5">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
+          <form onSubmit={handleAddComment} className="flex gap-3 mb-6">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
               {currentUser.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 flex gap-2">
               <input
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add a comment..."
-                className="flex-1 text-sm border border-line rounded-xl px-3 py-2 bg-canvas focus:outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="Write a comment..."
+                className="flex-1 text-xs border border-line rounded-xl px-4 py-2.5 bg-canvas text-ink focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-medium"
               />
               <button
                 type="submit"
                 disabled={submitting || !newComment.trim()}
-                className="bg-primary text-white px-3 py-2 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-40"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl transition-all disabled:opacity-40 cursor-pointer shadow-md shadow-indigo-500/20"
               >
                 <Send size={14} />
               </button>
@@ -307,29 +320,32 @@ function TaskDetail() {
 
           {/* Comment List */}
           {comments.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">No comments yet. Be the first!</p>
+            <p className="text-xs text-slate-400 text-center py-6 border border-dashed border-line rounded-2xl bg-canvas italic">
+              No comments posted yet. Start the conversation!
+            </p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {comments.map((c) => (
-                <div key={c._id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-bold shrink-0">
+                <div key={c._id} className="flex gap-3 p-4 rounded-2xl bg-canvas border border-line">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 text-xs font-bold shrink-0">
                     {c.author?.name?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium">{c.author?.name || 'User'}</span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-ink">{c.author?.name || 'User'}</span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">{c.text}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{c.text}</p>
                   </div>
                   {c.author?._id === currentUser.id && (
                     <button
                       onClick={() => handleDeleteComment(c._id)}
-                      className="text-gray-300 hover:text-red-400 transition-colors shrink-0"
+                      className="text-slate-400 hover:text-rose-500 p-1 rounded-lg transition-colors shrink-0 cursor-pointer"
+                      title="Delete comment"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={14} />
                     </button>
                   )}
                 </div>

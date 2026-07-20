@@ -17,9 +17,10 @@ const getProjectStats = async (req, res) => {
     if (!project || project.isArchived) return sendError(res, 404, 'Project not found')
 
     // Check access
-    const isMember =
-      project.owner.toString() === req.userId ||
-      project.members.map((m) => m.toString()).includes(req.userId)
+    const isOwner = project.owner.toString() === req.userId
+    const isMember = isOwner || project.members.some(
+      (m) => m.user.toString() === req.userId
+    )
     if (!isMember) return sendError(res, 403, 'Access denied')
 
     const tasks = await Task.find({ project: id, isArchived: false })
@@ -104,7 +105,7 @@ const getDashboardStats = async (req, res) => {
 
     // All projects this user is part of
     const projects = await Project.find({
-      $or: [{ owner: userId }, { members: userId }],
+      $or: [{ owner: userId }, { 'members.user': userId }],
       isArchived: false,
     })
     const projectIds = projects.map((p) => p._id)
@@ -133,11 +134,11 @@ const getDashboardStats = async (req, res) => {
       totalProjects: projects.length,
       totalTasksAssigned: myTasks.length,
       byStatus,
-      overdueCount: overdueTasks.length,
       overdueTasks: overdueTasks.map((t) => ({
         id: t._id,
         title: t.title,
         project: t.project?.name,
+        projectId: t.project?._id,
         dueDate: t.dueDate,
         priority: t.priority,
       })),
@@ -146,6 +147,7 @@ const getDashboardStats = async (req, res) => {
         id: t._id,
         title: t.title,
         project: t.project?.name,
+        projectId: t.project?._id,
         dueDate: t.dueDate,
         priority: t.priority,
       })),
