@@ -163,7 +163,12 @@ const getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password -refreshToken')
     if (!user) return sendError(res, 404, 'User not found')
-    return sendSuccess(res, 200, 'Profile fetched', user)
+
+    // Normalize: add id field alongside _id for frontend compatibility
+    const userObj = user.toObject()
+    userObj.id = userObj._id.toString()
+
+    return sendSuccess(res, 200, 'Profile fetched', userObj)
   } catch (error) {
     return sendError(res, 500, 'Server error', error.message)
   }

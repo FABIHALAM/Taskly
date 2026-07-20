@@ -2,6 +2,7 @@ import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import { useNavigate, Link } from 'react-router-dom'
 import { loginUser } from '../services/authService'
+import api from '../services/api'
 
 function Login() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm()
@@ -11,9 +12,16 @@ function Login() {
     try {
       const result = await loginUser(data)
       const { accessToken, refreshToken, user } = result.data
+
+      // Save tokens first
       localStorage.setItem('token', accessToken)
       localStorage.setItem('refreshToken', refreshToken)
-      localStorage.setItem('user', JSON.stringify(user))
+
+      // Fetch fresh user from DB to always get correct role
+      const profileRes = await api.get('/auth/me')
+      const freshUser = profileRes.data?.data || user
+      localStorage.setItem('user', JSON.stringify(freshUser))
+
       navigate('/dashboard')
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed')
