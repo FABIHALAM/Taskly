@@ -1,8 +1,36 @@
 const Task = require('../models/Task')
 const Project = require('../models/project')
+const User = require('../models/User')
 const { sendSuccess, sendError } = require('../utils/response')
 const logActivity = require('../utils/logActivity')
 const { createNotification } = require('./notificationController')
+const { sendTaskAssignedEmail } = require('../utils/emailService')
+
+// Helper to trigger email notification in background without blocking response
+const triggerTaskAssignedEmail = async (managerUserId, assigneeUserId, taskTitle, projectId, priority, dueDate, taskId) => {
+  try {
+    const [manager, assigneeUser, project] = await Promise.all([
+      User.findById(managerUserId).select('name'),
+      User.findById(assigneeUserId).select('name email'),
+      Project.findById(projectId).select('name'),
+    ])
+
+    if (assigneeUser && assigneeUser.email) {
+      await sendTaskAssignedEmail({
+        to: assigneeUser.email,
+        assigneeName: assigneeUser.name,
+        managerName: manager?.name || 'Project Manager',
+        taskTitle,
+        projectName: project?.name || 'Project',
+        priority: priority || 'Medium',
+        dueDate,
+        taskUrl: `http://localhost:5173/projects/${projectId}/tasks/${taskId}`,
+      })
+    }
+  } catch (err) {
+    console.error('Task email notification error:', err.message)
+  }
+}
 
 // Create a new task inside a project
 const createTask = async (req, res) => {
@@ -38,6 +66,8 @@ const createTask = async (req, res) => {
         task._id,
         `You have been assigned a new task: "${title}"`
       )
+      // Send email notification to assignee's email address
+      triggerTaskAssignedEmail(req.userId, assignee, title, projectId, priority, dueDate, task._id)
     }
 
     return sendSuccess(res, 201, 'Task created successfully', task)
@@ -124,6 +154,7 @@ const updateTask = async (req, res) => {
         taskId,
         `You have been assigned a task: "${updatedTask.title}"`
       )
+      triggerTaskAssignedEmail(req.userId, assignee, updatedTask.title, updatedTask.project, updatedTask.priority, updatedTask.dueDate, taskId)
     }
 
     return sendSuccess(res, 200, 'Task updated successfully', updatedTask)
@@ -138,7 +169,12 @@ const updateTaskStatus = async (req, res) => {
     const { taskId } = req.params
     const { status } = req.body
 
-    const task = await Task.findByIdAndUpdate(taskId, { status }, { new: true })
+    const task = await Task.findByIdAndUpdate(
+      taskId,
+      { status },
+      { new: true }
+    )
+
     if (!task) return sendError(res, 404, 'Task not found')
 
     await logActivity('task_status_changed', req.userId, 'Task', taskId)
@@ -165,4 +201,10 @@ const deleteTask = async (req, res) => {
   }
 }
 
-module.exports = { createTask, getTasksByProject, updateTask, updateTaskStatus, deleteTask }
+module.exports = {
+  createTask,
+  getTasksByProject,
+  updateTask,
+  updateTaskStatus,
+  deleteTask,
+}
