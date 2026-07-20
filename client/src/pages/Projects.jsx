@@ -7,6 +7,7 @@ import DashboardLayout from '../layout/DashboardLayout'
 import CreateProjectModal from '../components/CreateProjectModal'
 import { createProject, getMyProjects, deleteProject } from '../services/projectService'
 import ConfirmDialog from '../components/ConfirmDialog'
+import AppLoader from '../components/AppLoader'
 
 function Projects() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -90,10 +91,7 @@ function Projects() {
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-2 text-xs text-slate-400">
-            <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            Loading project workspace...
-          </div>
+          <AppLoader message="Fetching project workspace..." />
         ) : projects.length === 0 ? (
           <div className="bg-surface border border-dashed border-line rounded-3xl p-14 text-center">
             <FolderKanban className="mx-auto text-slate-300 dark:text-slate-600 mb-3" size={44} />

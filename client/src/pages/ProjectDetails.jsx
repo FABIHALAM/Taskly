@@ -12,6 +12,7 @@ import CreateTaskModal from '../components/CreateTaskModal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { getTasksByProject, updateTaskStatus, deleteTask } from '../services/taskService'
 import { getProjectById, addMember, removeMember } from '../services/projectService'
+import AppLoader from '../components/AppLoader'
 
 const COLUMNS = [
   { key: 'To Do',       color: 'border-t-slate-400',   bg: 'bg-slate-500/5',   badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-300' },
@@ -165,14 +166,7 @@ function ProjectDetails() {
     return { leftPct, widthPct, isOverdue }
   }
 
-  if (isLoading) return (
-    <DashboardLayout>
-      <div className="flex flex-col items-center justify-center h-64 gap-2 text-xs text-slate-400">
-        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        Loading project workspace...
-      </div>
-    </DashboardLayout>
-  )
+  if (isLoading) return <AppLoader message="Loading project board..." />
 
   return (
     <DashboardLayout>

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import DashboardLayout from '../layout/DashboardLayout'
 import { getTasksByProject, updateTask, deleteTask } from '../services/taskService'
 import { getComments, addComment, deleteComment } from '../services/commentService'
+import AppLoader from '../components/AppLoader'
 
 const STATUSES = ['To Do', 'In Progress', 'Done']
 const PRIORITIES = ['Low', 'Medium', 'High']
@@ -109,14 +110,7 @@ function TaskDetail() {
     } catch { toast.error('Failed to delete comment') }
   }
 
-  if (isLoading) return (
-    <DashboardLayout>
-      <div className="flex flex-col items-center justify-center h-64 gap-2 text-xs text-slate-400">
-        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        Loading task details...
-      </div>
-    </DashboardLayout>
-  )
+  if (isLoading) return <AppLoader message="Loading task details..." />
 
   if (!task) return null
 
