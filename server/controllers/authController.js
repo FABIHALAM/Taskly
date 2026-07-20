@@ -27,7 +27,7 @@ const generateRefreshToken = (userId) =>
  */
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body
+    const { name, email, password, role } = req.body
 
     const existingUser = await User.findOne({ email })
     if (existingUser) {
@@ -37,7 +37,16 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    const newUser = await User.create({ name, email, password: hashedPassword })
+    // Only allow 'manager' or 'member' on registration — 'admin' must be set manually
+    const allowedRoles = ['manager', 'member']
+    const assignedRole = allowedRoles.includes(role) ? role : 'member'
+
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: assignedRole,
+    })
 
     return sendSuccess(res, 201, 'User registered successfully', {
       id: newUser._id,

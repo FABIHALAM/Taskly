@@ -1,4 +1,5 @@
 const Task = require('../models/Task')
+const Project = require('../models/project')
 const { sendSuccess, sendError } = require('../utils/response')
 const logActivity = require('../utils/logActivity')
 const { createNotification } = require('./notificationController')
@@ -8,6 +9,13 @@ const createTask = async (req, res) => {
   try {
     const { title, description, priority, dueDate, assignee, tags } = req.body
     const { projectId } = req.params
+
+    // Only project owner can create tasks
+    const project = await Project.findById(projectId)
+    if (!project || project.isArchived) return sendError(res, 404, 'Project not found')
+    if (project.owner.toString() !== req.userId) {
+      return sendError(res, 403, 'Only the project manager can create tasks')
+    }
 
     const task = await Task.create({
       title,
