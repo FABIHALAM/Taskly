@@ -27,7 +27,14 @@ const generateRefreshToken = (userId) =>
  */
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body
+    const { name, email, password } = req.body
+
+    // Read role directly and safely — never rely on destructuring alone
+    const rawRole = req.body.role
+    const allowedRoles = ['manager', 'member']
+    const assignedRole = (typeof rawRole === 'string' && allowedRoles.includes(rawRole.trim().toLowerCase()))
+      ? rawRole.trim().toLowerCase()
+      : 'member'
 
     const existingUser = await User.findOne({ email })
     if (existingUser) {
@@ -36,10 +43,6 @@ const registerUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
-
-    // Only allow 'manager' or 'member' on registration — 'admin' must be set manually
-    const allowedRoles = ['manager', 'member']
-    const assignedRole = allowedRoles.includes(role) ? role : 'member'
 
     const newUser = await User.create({
       name,

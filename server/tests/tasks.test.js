@@ -23,6 +23,7 @@ beforeAll(async () => {
     name: 'Test User',
     email: 'testuser@taskly.dev',
     password: 'password123',
+    role: 'manager',
   })
 
   const loginRes = await request(app).post('/api/auth/login').send({

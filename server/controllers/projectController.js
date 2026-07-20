@@ -5,20 +5,20 @@ const logActivity = require('../utils/logActivity')
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Check if a user is the owner of a project.
- */
-const isOwner = (project, userId) =>
-  project.owner.toString() === userId.toString()
+const isOwner = (project, userId) => {
+  if (!project || !project.owner || !userId) return false
+  const ownerId = project.owner._id ? project.owner._id : project.owner
+  return ownerId.toString() === userId.toString()
+}
 
-/**
- * Check if a user is any kind of member (including owner) of a project.
- */
 const isMember = (project, userId) => {
+  if (!project || !userId) return false
   if (isOwner(project, userId)) return true
-  return project.members.some(
-    (m) => m.user.toString() === userId.toString()
-  )
+  return project.members.some((m) => {
+    if (!m.user) return false
+    const memberId = m.user._id ? m.user._id : m.user
+    return memberId.toString() === userId.toString()
+  })
 }
 
 // ─── Controllers ─────────────────────────────────────────────────────────────
