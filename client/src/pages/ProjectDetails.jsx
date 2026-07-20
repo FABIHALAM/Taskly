@@ -1,8 +1,23 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, Plus, Trash2, Users, UserPlus, X,
-  LayoutGrid, AlignLeft, Calendar, Flag, Crown, UserCheck, Sparkles
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Users,
+  UserPlus,
+  X,
+  LayoutGrid,
+  AlignLeft,
+  Calendar,
+  Flag,
+  Crown,
+  UserCheck,
+  Sparkles,
+  Download,
+  ShieldCheck,
+  Clock,
+  ListTodo,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
@@ -15,15 +30,15 @@ import { getProjectById, addMember, removeMember } from '../services/projectServ
 import AppLoader from '../components/AppLoader'
 
 const COLUMNS = [
-  { key: 'To Do',       color: 'border-t-slate-400',   bg: 'bg-slate-500/5',   badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-300' },
-  { key: 'In Progress', color: 'border-t-indigo-500',  bg: 'bg-indigo-500/5',  badge: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
-  { key: 'Done',        color: 'border-t-emerald-500', bg: 'bg-emerald-500/5', badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+  { key: 'To Do', color: 'border-t-slate-400', bg: 'bg-slate-500/5', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-300' },
+  { key: 'In Progress', color: 'border-t-indigo-500', bg: 'bg-indigo-500/5', badge: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
+  { key: 'Done', color: 'border-t-emerald-500', bg: 'bg-emerald-500/5', badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
 ]
 
 const PRIORITY_STYLE = {
-  High:   'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+  High: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
   Medium: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
-  Low:    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+  Low: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
 }
 
 function ProjectDetails() {
@@ -32,65 +47,40 @@ function ProjectDetails() {
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
 
-  const [project, setProject]           = useState(null)
-  const [tasks, setTasks]               = useState([])
-  const [isLoading, setIsLoading]       = useState(true)
-  const [isModalOpen, setIsModalOpen]   = useState(false)
+  const [project, setProject] = useState(null)
+  const [tasks, setTasks] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState(null)
   const [priorityFilter, setPriorityFilter] = useState('')
-  const [viewMode, setViewMode]         = useState('board')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [viewMode, setViewMode] = useState('board')
 
-  // Members panel state
-  const [showMembers, setShowMembers]   = useState(false)
-  const [memberEmail, setMemberEmail]   = useState('')
+  // Members Drawer state
+  const [showMembers, setShowMembers] = useState(false)
+  const [newMemberEmail, setNewMemberEmail] = useState('')
   const [addingMember, setAddingMember] = useState(false)
 
-  // ─── Data Loading ─────────────────────────────────────────────────────────
+  const isOwner = project && project.owner && (project.owner._id || project.owner) === currentUser.id
 
-  const loadProject = async () => {
+  const fetchProjectAndTasks = async () => {
     try {
-      const res = await getProjectById(id)
-      setProject(res.data)
-    } catch {
-      toast.error('Failed to load project details')
-    }
-  }
-
-  const fetchTasks = async () => {
-    try {
-      const filters = { order: 'desc' }
-      if (priorityFilter) filters.priority = priorityFilter
-      const result = await getTasksByProject(id, filters)
-      setTasks(result.data?.tasks || [])
-    } catch {
-      setTasks([])
+      const [projRes, taskRes] = await Promise.all([
+        getProjectById(id),
+        getTasksByProject(id, priorityFilter ? { priority: priorityFilter } : {}),
+      ])
+      setProject(projRes.data)
+      setTasks(taskRes.data?.tasks || [])
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to load project details')
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    loadProject()
-    fetchTasks()
+    fetchProjectAndTasks()
   }, [id, priorityFilter])
-
-  // ─── Computed ─────────────────────────────────────────────────────────────
-
-  const isOwner = project?.owner?._id === currentUser.id || project?.owner === currentUser.id
-  const members = project?.members || []
-
-  // ─── Task Handlers ────────────────────────────────────────────────────────
-
-  const confirmDeleteTask = async () => {
-    try {
-      await deleteTask(deleteTargetId)
-      setDeleteTargetId(null)
-      fetchTasks()
-      toast.success('Task deleted')
-    } catch {
-      toast.error('Failed to delete task')
-    }
-  }
 
   const handleDragEnd = async (result) => {
     const { destination, source, draggableId } = result
@@ -98,27 +88,42 @@ function ProjectDetails() {
     if (destination.droppableId === source.droppableId && destination.index === source.index) return
 
     const newStatus = destination.droppableId
+
     setTasks((prev) =>
-      prev.map((task) => task._id === draggableId ? { ...task, status: newStatus } : task)
+      prev.map((t) => (t._id === draggableId ? { ...t, status: newStatus } : t))
     )
+
     try {
       await updateTaskStatus(draggableId, newStatus)
+      toast.success(`Moved to ${newStatus}`)
     } catch {
-      fetchTasks()
+      toast.error('Failed to update task status')
+      fetchProjectAndTasks()
     }
   }
 
-  // ─── Member Handlers ──────────────────────────────────────────────────────
+  const handleDeleteTask = async () => {
+    if (!deleteTargetId) return
+    try {
+      await deleteTask(deleteTargetId)
+      setTasks((prev) => prev.filter((t) => t._id !== deleteTargetId))
+      toast.success('Task deleted')
+    } catch {
+      toast.error('Failed to delete task')
+    } finally {
+      setDeleteTargetId(null)
+    }
+  }
 
   const handleAddMember = async (e) => {
     e.preventDefault()
-    if (!memberEmail.trim()) return
+    if (!newMemberEmail.trim()) return
     setAddingMember(true)
     try {
-      const res = await addMember(id, memberEmail.trim())
-      setProject(res.data)
-      setMemberEmail('')
-      toast.success('Team member added!')
+      await addMember(id, newMemberEmail.trim())
+      toast.success('Member added successfully!')
+      setNewMemberEmail('')
+      fetchProjectAndTasks()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add member')
     } finally {
@@ -128,15 +133,56 @@ function ProjectDetails() {
 
   const handleRemoveMember = async (userId) => {
     try {
-      const res = await removeMember(id, userId)
-      setProject(res.data)
+      await removeMember(id, userId)
       toast.success('Member removed')
+      fetchProjectAndTasks()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to remove member')
     }
   }
 
-  // ─── Gantt Timeline Helpers ───────────────────────────────────────────────
+  const handleExportCsv = () => {
+    if (tasks.length === 0) return toast.error('No tasks to export')
+    const headers = ['Title', 'Status', 'Priority', 'Assignee', 'Logged Hours', 'Estimated Hours', 'Due Date']
+    const rows = tasks.map((t) => [
+      `"${t.title.replace(/"/g, '""')}"`,
+      t.status,
+      t.priority,
+      `"${t.assignee?.name || 'Unassigned'}"`,
+      t.loggedHours || 0,
+      t.estimatedHours || 0,
+      t.dueDate ? new Date(t.dueDate).toLocaleDateString() : 'N/A',
+    ])
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `${project?.name || 'Project'}_Task_Report.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success('CSV Report exported successfully!')
+  }
+
+  const calculateHealthScore = () => {
+    if (tasks.length === 0) return { score: 100, label: 'Optimal Pace', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' }
+    const doneTasks = tasks.filter((t) => t.status === 'Done').length
+    const overdueTasks = tasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'Done').length
+    const completionPct = (doneTasks / tasks.length) * 100
+    const overduePenalty = (overdueTasks / tasks.length) * 40
+    const score = Math.max(0, Math.round(completionPct - overduePenalty + 30))
+
+    if (score >= 80) return { score, label: 'Optimal Pace — High Health', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' }
+    if (score >= 50) return { score, label: 'Moderate Workload Pace', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' }
+    return { score, label: 'High Overdue Risk Alert', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20' }
+  }
+
+  const filteredTasks = tasks.filter((t) =>
+    t.title.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const members = project?.members || []
+  const healthInfo = calculateHealthScore()
 
   const getTimelineDates = () => {
     const dates = []
@@ -154,9 +200,9 @@ function ProjectDetails() {
 
   const getTaskBar = (task) => {
     const start = new Date(task.createdAt)
-    const end   = task.dueDate ? new Date(task.dueDate) : new Date(Date.now() + 86400000)
+    const end = task.dueDate ? new Date(task.dueDate) : new Date(Date.now() + 86400000)
     const tStart = timelineDates[0]
-    const tEnd   = timelineDates[timelineDates.length - 1]
+    const tEnd = timelineDates[timelineDates.length - 1]
     const totalMs = tEnd - tStart
 
     const leftPct = Math.max(0, ((start - tStart) / totalMs) * 100)
@@ -171,7 +217,6 @@ function ProjectDetails() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
-
         {/* Back Button */}
         <button
           onClick={() => navigate('/projects')}
@@ -180,7 +225,7 @@ function ProjectDetails() {
           <ArrowLeft size={15} /> Back to Projects
         </button>
 
-        {/* Header */}
+        {/* Header Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-2">
@@ -200,6 +245,15 @@ function ProjectDetails() {
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap">
+            {/* CSV Export Button */}
+            <button
+              onClick={handleExportCsv}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-line bg-surface text-xs font-bold text-ink hover:border-indigo-500/30 transition-all shadow-sm cursor-pointer"
+            >
+              <Download size={14} className="text-cyan-400" />
+              <span>Export Report</span>
+            </button>
+
             {/* Members Button */}
             <button
               onClick={() => setShowMembers(true)}
@@ -229,23 +283,11 @@ function ProjectDetails() {
               </button>
             </div>
 
-            {/* Priority Filter */}
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-            >
-              <option value="">All Priorities</option>
-              <option value="High">🔴 High Priority</option>
-              <option value="Medium">🟡 Medium Priority</option>
-              <option value="Low">🟢 Low Priority</option>
-            </select>
-
-            {/* Create Task — Owner Only */}
+            {/* Create Task (Manager only) */}
             {isOwner && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
               >
                 <Plus size={16} /> New Task
               </button>
@@ -253,19 +295,64 @@ function ProjectDetails() {
           </div>
         </div>
 
-        {/* ─── BOARD VIEW ─────────────────────────────────────────────── */}
+        {/* ─── PROJECT HEALTH SCORE BANNER ───────────────────────────────────── */}
+        <div className="bg-surface border border-line rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-3 rounded-2xl border ${healthInfo.color}`}>
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-display font-black text-lg text-ink">Project Health: {healthInfo.score}%</span>
+                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${healthInfo.color}`}>
+                  {healthInfo.label}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium">Calculated based on overdue velocity & task completion ratio.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters Bar */}
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-surface p-4 border border-line rounded-2xl">
+          <input
+            type="text"
+            placeholder="Search tasks by title..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:w-64 text-xs font-medium border border-line rounded-xl px-3.5 py-2 bg-canvas text-ink focus:outline-none focus:border-indigo-500"
+          />
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-xs font-bold text-slate-400">Filter Priority:</span>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none cursor-pointer"
+            >
+              <option value="">All Priorities</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+        </div>
+
+        {/* ─── KANBAN BOARD VIEW ────────────────────────────────────── */}
         {viewMode === 'board' && (
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {COLUMNS.map((col) => {
-                const colTasks = tasks.filter((t) => t.status === col.key)
+                const colTasks = filteredTasks.filter((t) => t.status === col.key)
+
                 return (
-                  <div key={col.key} className={`bg-surface border-t-4 ${col.color} border border-line rounded-3xl overflow-hidden shadow-sm flex flex-col`}>
-                    {/* Column Header */}
-                    <div className="px-5 py-3.5 flex items-center justify-between border-b border-line bg-canvas/40">
-                      <span className="font-display font-bold text-xs uppercase tracking-wider text-ink">{col.key}</span>
-                      <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${col.badge}`}>
-                        {colTasks.length}
+                  <div key={col.key} className={`flex flex-col rounded-3xl border border-line ${col.bg} p-4 min-h-[500px]`}>
+                    <div className="flex items-center justify-between mb-4 px-2">
+                      <span className="font-display font-bold text-sm text-ink flex items-center gap-2">
+                        <span>{col.key}</span>
+                        <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full ${col.badge}`}>
+                          {colTasks.length}
+                        </span>
                       </span>
                     </div>
 
@@ -274,63 +361,58 @@ function ProjectDetails() {
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`p-3.5 flex-1 min-h-[350px] space-y-3 transition-colors ${snapshot.isDraggingOver ? col.bg : ''}`}
+                          className={`flex-1 space-y-3 transition-colors rounded-2xl ${
+                            snapshot.isDraggingOver ? 'bg-indigo-500/10 p-2 border border-dashed border-indigo-500/30' : ''
+                          }`}
                         >
                           {colTasks.map((task, index) => {
-                            const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done'
+                            const subCount = task.subtasks ? task.subtasks.length : 0
+                            const subDone = task.subtasks ? task.subtasks.filter((s) => s.isCompleted).length : 0
+
                             return (
                               <Draggable key={task._id} draggableId={task._id} index={index}>
-                                {(prov, snap) => (
+                                {(provided, snapshot) => (
                                   <div
-                                    ref={prov.innerRef}
-                                    {...prov.draggableProps}
-                                    {...prov.dragHandleProps}
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
                                     onClick={() => navigate(`/projects/${id}/tasks/${task._id}`)}
-                                    className={`bg-canvas rounded-2xl p-4 border cursor-pointer group transition-all glow-card ${
-                                      snap.isDragging
-                                        ? 'shadow-2xl border-indigo-500/50 rotate-2 scale-105 z-50 bg-surface'
-                                        : isOverdue
-                                          ? 'border-rose-500/40 hover:border-rose-500'
-                                          : 'border-line hover:border-indigo-500/40'
+                                    className={`bg-surface border border-line rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group space-y-3 ${
+                                      snapshot.isDragging ? 'shadow-2xl ring-2 ring-indigo-500' : ''
                                     }`}
                                   >
-                                    {/* Priority + Tags */}
-                                    <div className="flex flex-wrap gap-1.5 mb-2.5">
-                                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${PRIORITY_STYLE[task.priority]}`}>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <h4 className="font-display font-bold text-xs text-ink line-clamp-2 group-hover:text-indigo-500 transition-colors">
+                                        {task.title}
+                                      </h4>
+                                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${PRIORITY_STYLE[task.priority]}`}>
                                         {task.priority}
                                       </span>
-                                      {task.tags?.slice(0, 2).map((tag) => (
-                                        <span key={tag} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
-                                          {tag}
-                                        </span>
-                                      ))}
                                     </div>
 
-                                    {/* Title */}
-                                    <p className="text-xs font-bold text-ink leading-relaxed mb-3 group-hover:text-indigo-500 transition-colors">
-                                      {task.title}
-                                    </p>
+                                    {/* Task Metrics & Subtasks ratio */}
+                                    <div className="flex items-center gap-3 text-[10px] text-slate-400 font-semibold pt-1 border-t border-line/50">
+                                      {subCount > 0 && (
+                                        <span className="flex items-center gap-1 text-cyan-400">
+                                          <ListTodo size={11} /> {subDone}/{subCount}
+                                        </span>
+                                      )}
+                                      <span className="flex items-center gap-1 text-emerald-400">
+                                        <Clock size={11} /> {task.loggedHours || 0}/{task.estimatedHours || 8}h
+                                      </span>
+                                    </div>
 
-                                    {/* Due Date + Assignee + Delete */}
-                                    <div className="flex items-center justify-between pt-2 border-t border-line">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        {task.dueDate && (
-                                          <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${isOverdue ? 'bg-rose-500/10 text-rose-500' : 'bg-slate-500/10 text-slate-400'}`}>
-                                            <Calendar size={9} />
-                                            {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                            {isOverdue && ' ⚠️'}
-                                          </span>
-                                        )}
-                                        {task.assignee && (
-                                          <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
-                                            <UserCheck size={10} className="text-emerald-500" />
-                                            {task.assignee.name || 'Assigned'}
-                                          </span>
-                                        )}
+                                    <div className="flex items-center justify-between text-[11px] pt-1">
+                                      <div className="flex items-center gap-1 text-slate-400">
+                                        <Users size={12} />
+                                        <span>{task.assignee ? task.assignee.name : 'Unassigned'}</span>
                                       </div>
                                       {isOwner && (
                                         <button
-                                          onClick={(e) => { e.stopPropagation(); setDeleteTargetId(task._id) }}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            setDeleteTargetId(task._id)
+                                          }}
                                           className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
                                           title="Delete Task"
                                         >
@@ -344,11 +426,6 @@ function ProjectDetails() {
                             )
                           })}
                           {provided.placeholder}
-                          {colTasks.length === 0 && !snapshot.isDraggingOver && (
-                            <div className="h-full flex items-center justify-center border border-dashed border-line rounded-2xl p-6 text-center">
-                              <p className="text-xs text-slate-400 italic">No tasks in this column</p>
-                            </div>
-                          )}
                         </div>
                       )}
                     </Droppable>
@@ -363,7 +440,9 @@ function ProjectDetails() {
         {viewMode === 'timeline' && (
           <div className="bg-surface border border-line rounded-3xl overflow-hidden shadow-sm">
             <div className="flex border-b border-line bg-canvas/50">
-              <div className="w-52 shrink-0 px-5 py-3.5 border-r border-line font-bold text-xs uppercase tracking-wider text-slate-400">Task Name</div>
+              <div className="w-52 shrink-0 px-5 py-3.5 border-r border-line font-bold text-xs uppercase tracking-wider text-slate-400">
+                Task Name
+              </div>
               <div className="flex-1 overflow-x-auto">
                 <div className="flex" style={{ minWidth: `${timelineDates.length * 64}px` }}>
                   {timelineDates.map((date, i) => {
@@ -371,7 +450,9 @@ function ProjectDetails() {
                     return (
                       <div
                         key={i}
-                        className={`flex-1 text-center text-[10px] py-3.5 border-r border-line font-bold uppercase tracking-wider ${isToday ? 'text-indigo-500 bg-indigo-500/10' : 'text-slate-400'}`}
+                        className={`flex-1 text-center text-[10px] py-3.5 border-r border-line font-bold uppercase tracking-wider ${
+                          isToday ? 'text-indigo-500 bg-indigo-500/10' : 'text-slate-400'
+                        }`}
                         style={{ minWidth: 64 }}
                       >
                         {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -402,11 +483,7 @@ function ProjectDetails() {
                       <div style={{ minWidth: `${timelineDates.length * 64}px`, position: 'relative', height: '100%' }}>
                         <div
                           className={`absolute top-1/2 -translate-y-1/2 h-7 rounded-full flex items-center px-3 text-[11px] font-bold text-white shadow-md transition-all ${
-                            task.status === 'Done'
-                              ? 'bg-emerald-500'
-                              : isOverdue
-                                ? 'bg-rose-500 animate-pulse'
-                                : 'bg-indigo-600'
+                            task.status === 'Done' ? 'bg-emerald-500' : isOverdue ? 'bg-rose-500 animate-pulse' : 'bg-indigo-600'
                           }`}
                           style={{ left: `${leftPct}%`, width: `${widthPct}%`, minWidth: 50 }}
                         >
@@ -421,66 +498,71 @@ function ProjectDetails() {
           </div>
         )}
 
-        {/* ─── MEMBERS PANEL (Slide-in Drawer) ────────────────────────────── */}
+        {/* Members Drawer / Modal */}
         <AnimatePresence>
           {showMembers && (
-            <>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-                onClick={() => setShowMembers(false)}
-              />
-              <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-                className="fixed right-0 top-0 h-full w-84 bg-surface border-l border-line shadow-2xl z-50 flex flex-col"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-surface border border-line rounded-3xl p-6 shadow-2xl w-full max-w-md space-y-4"
               >
-                {/* Panel Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-line">
-                  <div className="flex items-center gap-2">
-                    <Users size={18} className="text-indigo-500" />
-                    <h3 className="font-display font-bold text-base text-ink">Project Members</h3>
-                  </div>
-                  <button onClick={() => setShowMembers(false)} className="p-2 rounded-xl text-slate-400 hover:text-ink hover:bg-canvas transition-colors cursor-pointer">
+                <div className="flex items-center justify-between border-b border-line pb-3">
+                  <h3 className="font-display font-bold text-base text-ink flex items-center gap-2">
+                    <Users size={18} className="text-indigo-500" /> Project Members
+                  </h3>
+                  <button onClick={() => setShowMembers(false)} className="text-slate-400 hover:text-ink">
                     <X size={18} />
                   </button>
                 </div>
 
-                {/* Member List */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-3">
+                {isOwner && (
+                  <form onSubmit={handleAddMember} className="flex gap-2">
+                    <input
+                      type="email"
+                      value={newMemberEmail}
+                      onChange={(e) => setNewMemberEmail(e.target.value)}
+                      placeholder="Add member by email..."
+                      className="flex-1 text-xs border border-line rounded-xl px-3.5 py-2 bg-canvas text-ink focus:outline-none focus:border-indigo-500"
+                    />
+                    <button
+                      type="submit"
+                      disabled={addingMember || !newMemberEmail.trim()}
+                      className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                    >
+                      <UserPlus size={14} /> Add
+                    </button>
+                  </form>
+                )}
+
+                <div className="space-y-2 max-h-60 overflow-y-auto pt-2">
                   {members.map((m) => {
                     const u = m.user || m
-                    const memberIsOwner = m.role === 'owner'
+                    const isMemOwner = m.role === 'owner'
                     return (
-                      <div key={u._id} className="flex items-center gap-3 p-3.5 rounded-2xl bg-canvas border border-line group">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm ${memberIsOwner ? 'bg-gradient-to-tr from-indigo-600 to-purple-600' : 'bg-gradient-to-tr from-emerald-500 to-teal-600'}`}>
-                          {u.name?.[0]?.toUpperCase() || 'U'}
+                      <div key={u._id} className="flex items-center justify-between p-3 rounded-2xl bg-canvas border border-line text-xs">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 font-bold flex items-center justify-center uppercase">
+                            {u.name ? u.name[0] : 'U'}
+                          </div>
+                          <div>
+                            <p className="font-bold text-ink">{u.name}</p>
+                            <p className="text-[10px] text-slate-400">{u.email}</p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-ink truncate">{u.name}</p>
-                          <p className="text-[11px] text-slate-400 truncate mt-0.5">{u.email}</p>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {memberIsOwner ? (
-                            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                              <Crown size={9} /> Manager
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                              <UserCheck size={9} /> Member
-                            </span>
-                          )}
-                          {isOwner && !memberIsOwner && (
+
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isMemOwner ? 'bg-indigo-500/10 text-indigo-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                            {isMemOwner ? '👔 Manager' : '👷 Member'}
+                          </span>
+                          {isOwner && !isMemOwner && (
                             <button
                               onClick={() => handleRemoveMember(u._id)}
-                              className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer ml-1"
-                              title="Remove member"
+                              className="text-slate-400 hover:text-rose-500 p-1"
+                              title="Remove Member"
                             >
-                              <X size={14} />
+                              <Trash2 size={13} />
                             </button>
                           )}
                         </div>
@@ -488,37 +570,19 @@ function ProjectDetails() {
                     )
                   })}
                 </div>
-
-                {/* Add Member Form — Owner Only */}
-                {isOwner && (
-                  <div className="p-5 border-t border-line bg-canvas/50">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Invite Member by Email</p>
-                    <form onSubmit={handleAddMember} className="flex gap-2">
-                      <input
-                        type="email"
-                        value={memberEmail}
-                        onChange={(e) => setMemberEmail(e.target.value)}
-                        placeholder="colleague@company.com"
-                        className="flex-1 text-xs border border-line rounded-xl px-3.5 py-2.5 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
-                      />
-                      <button
-                        type="submit"
-                        disabled={addingMember || !memberEmail.trim()}
-                        className="p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl disabled:opacity-40 transition-all cursor-pointer shadow-md shadow-indigo-500/20"
-                      >
-                        {addingMember
-                          ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          : <UserPlus size={16} />
-                        }
-                      </button>
-                    </form>
-                    <p className="text-[10px] text-slate-400 mt-2 font-medium">User must have an active Taskly account</p>
-                  </div>
-                )}
               </motion.div>
-            </>
+            </div>
           )}
         </AnimatePresence>
+
+        {/* Delete Task Confirmation */}
+        <ConfirmDialog
+          isOpen={!!deleteTargetId}
+          title="Delete Task"
+          message="Are you sure you want to delete this task?"
+          onConfirm={handleDeleteTask}
+          onCancel={() => setDeleteTargetId(null)}
+        />
 
         {/* Create Task Modal */}
         {isModalOpen && (
@@ -526,16 +590,7 @@ function ProjectDetails() {
             projectId={id}
             members={members}
             onClose={() => setIsModalOpen(false)}
-            onCreated={fetchTasks}
-          />
-        )}
-
-        {/* Delete Confirm */}
-        {deleteTargetId && (
-          <ConfirmDialog
-            message="Are you sure you want to delete this task? This action cannot be undone."
-            onConfirm={confirmDeleteTask}
-            onCancel={() => setDeleteTargetId(null)}
+            onCreated={fetchProjectAndTasks}
           />
         )}
       </div>

@@ -35,10 +35,9 @@ const triggerTaskAssignedEmail = async (managerUserId, assigneeUserId, taskTitle
 // Create a new task inside a project
 const createTask = async (req, res) => {
   try {
-    const { title, description, priority, dueDate, assignee, tags } = req.body
+    const { title, description, priority, dueDate, assignee, tags, subtasks, estimatedHours, loggedHours } = req.body
     const { projectId } = req.params
 
-    // Only project owner can create tasks
     const project = await Project.findById(projectId)
     if (!project || project.isArchived) return sendError(res, 404, 'Project not found')
     if (project.owner.toString() !== req.userId) {
@@ -53,11 +52,13 @@ const createTask = async (req, res) => {
       assignee: assignee || null,
       project: projectId,
       tags: tags || [],
+      subtasks: subtasks || [],
+      estimatedHours: Number(estimatedHours) || 0,
+      loggedHours: Number(loggedHours) || 0,
     })
 
     await logActivity('task_created', req.userId, 'Task', task._id)
 
-    // Notify assignee if someone else created and assigned this task
     if (assignee && assignee.toString() !== req.userId) {
       await createNotification(
         'task_assigned',
@@ -66,7 +67,6 @@ const createTask = async (req, res) => {
         task._id,
         `You have been assigned a new task: "${title}"`
       )
-      // Send email notification to assignee's email address
       triggerTaskAssignedEmail(req.userId, assignee, title, projectId, priority, dueDate, task._id)
     }
 
@@ -76,7 +76,7 @@ const createTask = async (req, res) => {
   }
 }
 
-// Get all tasks for a specific project (with pagination, sorting, filtering, search)
+// Get all tasks for a specific project
 const getTasksByProject = async (req, res) => {
   try {
     const { projectId } = req.params
@@ -119,11 +119,11 @@ const getTasksByProject = async (req, res) => {
   }
 }
 
-// Update any field of a task (title, description, priority, dueDate, assignee, status)
+// Update task details
 const updateTask = async (req, res) => {
   try {
     const { taskId } = req.params
-    const { title, description, priority, dueDate, assignee, status, tags } = req.body
+    const { title, description, priority, dueDate, assignee, status, tags, subtasks, estimatedHours, loggedHours } = req.body
 
     const task = await Task.findById(taskId)
     if (!task) return sendError(res, 404, 'Task not found')
@@ -137,6 +137,9 @@ const updateTask = async (req, res) => {
     if (assignee !== undefined) updatedFields.assignee = assignee
     if (status !== undefined) updatedFields.status = status
     if (tags !== undefined) updatedFields.tags = tags
+    if (subtasks !== undefined) updatedFields.subtasks = subtasks
+    if (estimatedHours !== undefined) updatedFields.estimatedHours = Number(estimatedHours)
+    if (loggedHours !== undefined) updatedFields.loggedHours = Number(loggedHours)
 
     const updatedTask = await Task.findByIdAndUpdate(taskId, updatedFields, {
       new: true,
@@ -145,7 +148,6 @@ const updateTask = async (req, res) => {
 
     await logActivity('task_updated', req.userId, 'Task', taskId)
 
-    // Notify new assignee if changed
     if (assignee && assignee.toString() !== req.userId) {
       await createNotification(
         'task_assigned',
@@ -163,18 +165,99 @@ const updateTask = async (req, res) => {
   }
 }
 
-// Update task status only (for Kanban drag-drop)
+// Toggle subtask status
+const toggleSubtask = async (req, res) => {
+  try {
+    const { taskId, subtaskId } = req.params
+    const task = await Task.findById(taskId)
+    if (!task || task.isArchived) return sendError(res, 404, 'Task not found')
+
+    const subtask = task.subtasks.id(subtaskId)
+    if (!subtask) return sendError(res, 404, 'Subtask not found')
+
+    subtask.isCompleted = !subtask.isCompleted
+    await task.save()
+
+    return sendSuccess(res, 200, 'Subtask updated', task)
+  } catch (error) {
+    return sendError(res, 500, 'Server error')
+  }
+}
+
+// Smart AI Subtask Generator
+const generateAiSubtasks = async (req, res) => {
+  try {
+    const { title, description } = req.body
+    if (!title) return sendError(res, 400, 'Task title is required for AI generation')
+
+    const text = (title + ' ' + (description || '')).toLowerCase()
+    let suggestedSubtasks = []
+    let estimatedHours = 8
+    let suggestedTags = ['Feature']
+
+    if (text.includes('auth') || text.includes('login') || text.includes('user')) {
+      suggestedSubtasks = [
+        'Setup database user schema & validation',
+        'Create authentication API controller & JWT tokens',
+        'Build responsive frontend form & validation state',
+        'Write unit tests for sign-in & session flows',
+      ]
+      estimatedHours = 12
+      suggestedTags = ['Auth', 'Backend', 'Security']
+    } else if (text.includes('ui') || text.includes('design') || text.includes('frontend')) {
+      suggestedSubtasks = [
+        'Design responsive layout mockups in Figma',
+        'Implement component hierarchy & design tokens',
+        'Add smooth transitions & dark mode theme styles',
+        'Conduct cross-browser UI verification',
+      ]
+      estimatedHours = 10
+      suggestedTags = ['UI/UX', 'Frontend', 'Design']
+    } else if (text.includes('api') || text.includes('backend') || text.includes('database')) {
+      suggestedSubtasks = [
+        'Define Mongoose schema & index configuration',
+        'Implement REST API routes & validator middleware',
+        'Configure database connection pooling & error handling',
+        'Verify response performance & payload schemas',
+      ]
+      estimatedHours = 14
+      suggestedTags = ['Backend', 'Database', 'API']
+    } else if (text.includes('bug') || text.includes('fix') || text.includes('issue')) {
+      suggestedSubtasks = [
+        'Reproduce reported issue & inspect error stack trace',
+        'Implement targeted patch fix in core module',
+        'Add regression test case to prevent recurrence',
+      ]
+      estimatedHours = 6
+      suggestedTags = ['Bug', 'Hotfix']
+    } else {
+      suggestedSubtasks = [
+        'Gather technical requirements & document specifications',
+        'Implement core functional changes & dependencies',
+        'Perform integration testing & code review',
+        'Deploy update & verify staging environment',
+      ]
+      estimatedHours = 8
+      suggestedTags = ['Task', 'Engineering']
+    }
+
+    return sendSuccess(res, 200, 'AI subtasks generated successfully', {
+      subtasks: suggestedSubtasks,
+      estimatedHours,
+      suggestedTags,
+    })
+  } catch (error) {
+    return sendError(res, 500, 'Server error')
+  }
+}
+
+// Update task status only
 const updateTaskStatus = async (req, res) => {
   try {
     const { taskId } = req.params
     const { status } = req.body
 
-    const task = await Task.findByIdAndUpdate(
-      taskId,
-      { status },
-      { new: true }
-    )
-
+    const task = await Task.findByIdAndUpdate(taskId, { status }, { new: true })
     if (!task) return sendError(res, 404, 'Task not found')
 
     await logActivity('task_status_changed', req.userId, 'Task', taskId)
@@ -205,6 +288,8 @@ module.exports = {
   createTask,
   getTasksByProject,
   updateTask,
+  toggleSubtask,
+  generateAiSubtasks,
   updateTaskStatus,
   deleteTask,
 }

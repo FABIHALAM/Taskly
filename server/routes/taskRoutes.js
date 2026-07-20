@@ -1,7 +1,15 @@
 const express = require('express')
 const router = express.Router()
 const { body } = require('express-validator')
-const { createTask, getTasksByProject, updateTask, updateTaskStatus, deleteTask } = require('../controllers/taskController')
+const {
+  createTask,
+  getTasksByProject,
+  updateTask,
+  toggleSubtask,
+  generateAiSubtasks,
+  updateTaskStatus,
+  deleteTask,
+} = require('../controllers/taskController')
 const protect = require('../middleware/authMiddleware')
 const validateRequest = require('../middleware/validateRequest')
 
@@ -17,6 +25,8 @@ const updateTaskValidation = [
   body('status').optional().isIn(['To Do', 'In Progress', 'Done']).withMessage('Invalid status'),
 ]
 
+router.post('/ai-suggest', protect, generateAiSubtasks)
+router.patch('/:taskId/subtasks/:subtaskId', protect, toggleSubtask)
 router.post('/:projectId', protect, taskValidation, validateRequest, createTask)
 router.get('/:projectId', protect, getTasksByProject)
 router.put('/:taskId', protect, updateTaskValidation, validateRequest, updateTask)

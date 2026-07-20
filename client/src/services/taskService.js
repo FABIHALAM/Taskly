@@ -30,3 +30,13 @@ export const getTaskById = async (taskId) => {
   const response = await api.get(`/tasks/${taskId}`)
   return response.data
 }
+
+export const toggleSubtask = async (taskId, subtaskId) => {
+  const response = await api.patch(`/tasks/${taskId}/subtasks/${subtaskId}`)
+  return response.data
+}
+
+export const generateAiSubtasks = async (payload) => {
+  const response = await api.post('/tasks/ai-suggest', payload)
+  return response.data
+}

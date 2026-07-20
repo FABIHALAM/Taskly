@@ -3,41 +3,33 @@ const Task = require('../models/Task')
 const { sendSuccess, sendError } = require('../utils/response')
 const { createNotification } = require('./notificationController')
 
-// ─── Controllers ─────────────────────────────────────────────────────────────
-
-/**
- * @route   POST /api/comments/:taskId
- * @access  Protected
- * Add a new comment to a task.
- */
+// Add a new comment (text or voice note audioUrl)
 const addComment = async (req, res) => {
   try {
     const { taskId } = req.params
-    const { text } = req.body
+    const { text, audioUrl } = req.body
 
-    // Make sure the task exists and is not archived
     const task = await Task.findById(taskId)
     if (!task || task.isArchived) {
       return sendError(res, 404, 'Task not found')
     }
 
     const comment = await Comment.create({
-      text,
+      text: text || '',
+      audioUrl: audioUrl || null,
       task: taskId,
       author: req.userId,
     })
 
-    // Return comment with author details populated
     const populated = await comment.populate('author', 'name email')
 
-    // Notify task assignee if someone else comments
     if (task.assignee && task.assignee.toString() !== req.userId) {
       await createNotification(
         'comment_added',
         task.assignee,
         'Comment',
         comment._id,
-        `New comment on your task: "${task.title}"`
+        audioUrl ? `Voice note comment on your task: "${task.title}"` : `New comment on your task: "${task.title}"`
       )
     }
 
@@ -47,11 +39,6 @@ const addComment = async (req, res) => {
   }
 }
 
-/**
- * @route   GET /api/comments/:taskId
- * @access  Protected
- * Get all comments for a task, newest first.
- */
 const getCommentsByTask = async (req, res) => {
   try {
     const { taskId } = req.params
@@ -71,11 +58,6 @@ const getCommentsByTask = async (req, res) => {
   }
 }
 
-/**
- * @route   PUT /api/comments/:commentId
- * @access  Protected
- * Edit a comment — only the original author can edit.
- */
 const updateComment = async (req, res) => {
   try {
     const { commentId } = req.params
@@ -101,11 +83,6 @@ const updateComment = async (req, res) => {
   }
 }
 
-/**
- * @route   DELETE /api/comments/:commentId
- * @access  Protected
- * Delete a comment — only the original author can delete.
- */
 const deleteComment = async (req, res) => {
   try {
     const { commentId } = req.params

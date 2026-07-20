@@ -1,9 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Calendar, User, Flag, Trash2, Edit3, Send, AlertTriangle, Sparkles, CheckCircle2, Tag } from 'lucide-react'
+import {
+  ArrowLeft,
+  Calendar,
+  User,
+  Flag,
+  Trash2,
+  Edit3,
+  Send,
+  AlertTriangle,
+  Sparkles,
+  CheckCircle2,
+  Tag,
+  Clock,
+  Play,
+  Pause,
+  Save,
+  CheckSquare,
+  Square,
+  Mic,
+  Square as StopSquare,
+  Volume2,
+  ListTodo,
+} from 'lucide-react'
 import toast from 'react-hot-toast'
 import DashboardLayout from '../layout/DashboardLayout'
-import { getTasksByProject, updateTask, deleteTask } from '../services/taskService'
+import { getTasksByProject, updateTask, deleteTask, toggleSubtask } from '../services/taskService'
 import { getComments, addComment, deleteComment } from '../services/commentService'
 import AppLoader from '../components/AppLoader'
 
@@ -34,13 +56,29 @@ function TaskDetail() {
   const [isLoading, setIsLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
+  // Live Stopwatch State
+  const [isTimerRunning, setIsTimerRunning] = useState(false)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const timerRef = useRef(null)
+
+  // Voice Note State
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const mediaRecorderRef = useRef(null)
+  const audioChunksRef = useRef([])
+  const recordingIntervalRef = useRef(null)
+
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
 
   const loadTask = async () => {
     try {
       const res = await getTasksByProject(projectId, {})
       const found = res.data?.tasks?.find((t) => t._id === taskId)
-      if (!found) { toast.error('Task not found'); navigate(-1); return }
+      if (!found) {
+        toast.error('Task not found')
+        navigate(-1)
+        return
+      }
       setTask(found)
       setEditData({
         title: found.title,
@@ -49,19 +87,116 @@ function TaskDetail() {
         status: found.status,
         dueDate: found.dueDate ? new Date(found.dueDate).toISOString().split('T')[0] : '',
         tagsInput: found.tags ? found.tags.join(', ') : '',
+        estimatedHours: found.estimatedHours || 8,
+        loggedHours: found.loggedHours || 0,
       })
-    } catch { toast.error('Failed to load task') }
-    finally { setIsLoading(false) }
+    } catch {
+      toast.error('Failed to load task')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const loadComments = async () => {
     try {
       const res = await getComments(taskId)
       setComments(res.data || [])
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 
-  useEffect(() => { loadTask(); loadComments() }, [taskId])
+  useEffect(() => {
+    loadTask()
+    loadComments()
+  }, [taskId])
+
+  // Stopwatch interval handler
+  useEffect(() => {
+    if (isTimerRunning) {
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1)
+      }, 1000)
+    } else {
+      clearInterval(timerRef.current)
+    }
+    return () => clearInterval(timerRef.current)
+  }, [isTimerRunning])
+
+  const handleSaveTimer = async () => {
+    const additionalHours = Number((elapsedSeconds / 3600).toFixed(2))
+    if (additionalHours <= 0) return toast.error('Timer has not logged any time yet')
+
+    const newLoggedHours = Number(((task.loggedHours || 0) + additionalHours).toFixed(2))
+    try {
+      await updateTask(taskId, { loggedHours: newLoggedHours })
+      toast.success(`Logged +${additionalHours} hrs successfully!`)
+      setIsTimerRunning(false)
+      setElapsedSeconds(0)
+      loadTask()
+    } catch {
+      toast.error('Failed to log hours')
+    }
+  }
+
+  const handleToggleSubtaskItem = async (subtaskId) => {
+    try {
+      await toggleSubtask(taskId, subtaskId)
+      loadTask()
+    } catch {
+      toast.error('Failed to toggle subtask')
+    }
+  }
+
+  // Voice Note Recording Handlers
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mediaRecorderRef.current = new MediaRecorder(stream)
+      audioChunksRef.current = []
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        const reader = new FileReader()
+        reader.readAsDataURL(audioBlob)
+        reader.onloadend = async () => {
+          const base64Audio = reader.result
+          try {
+            await addComment(taskId, { text: '🎙️ Voice Note Comment', audioUrl: base64Audio })
+            toast.success('Voice note comment posted!')
+            loadComments()
+          } catch {
+            toast.error('Failed to post voice comment')
+          }
+        }
+      }
+
+      mediaRecorderRef.current.start()
+      setIsRecording(true)
+      setRecordingTime(0)
+
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1)
+      }, 1000)
+    } catch {
+      toast.error('Microphone access denied or unsupported')
+    }
+  }
+
+  const stopVoiceRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop()
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop())
+      setIsRecording(false)
+      clearInterval(recordingIntervalRef.current)
+    }
+  }
 
   const handleSave = async () => {
     try {
@@ -75,11 +210,15 @@ function TaskDetail() {
         status: editData.status,
         dueDate: editData.dueDate,
         tags,
+        estimatedHours: Number(editData.estimatedHours),
+        loggedHours: Number(editData.loggedHours),
       })
       toast.success('Task updated successfully!')
       setIsEditing(false)
       loadTask()
-    } catch { toast.error('Failed to update task') }
+    } catch {
+      toast.error('Failed to update task')
+    }
   }
 
   const handleDelete = async () => {
@@ -88,7 +227,9 @@ function TaskDetail() {
       await deleteTask(taskId)
       toast.success('Task deleted')
       navigate(`/projects/${projectId}`)
-    } catch { toast.error('Failed to delete task') }
+    } catch {
+      toast.error('Failed to delete task')
+    }
   }
 
   const handleAddComment = async (e) => {
@@ -96,256 +237,332 @@ function TaskDetail() {
     if (!newComment.trim()) return
     setSubmitting(true)
     try {
-      await addComment(taskId, newComment.trim())
+      await addComment(taskId, { text: newComment.trim() })
       setNewComment('')
       loadComments()
-    } catch { toast.error('Failed to add comment') }
-    finally { setSubmitting(false) }
+    } catch {
+      toast.error('Failed to post comment')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleDeleteComment = async (commentId) => {
     try {
       await deleteComment(commentId)
       loadComments()
-    } catch { toast.error('Failed to delete comment') }
+    } catch {
+      toast.error('Failed to delete comment')
+    }
   }
 
   if (isLoading) return <AppLoader message="Loading task details..." />
-
   if (!task) return null
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done'
+  const subtasksList = task.subtasks || []
+  const completedSubtasks = subtasksList.filter((s) => s.isCompleted).length
+
+  const formatTimer = (totalSec) => {
+    const hrs = Math.floor(totalSec / 3600)
+    const mins = Math.floor((totalSec % 3600) / 60)
+    const secs = totalSec % 60
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Back */}
+      <div className="max-w-4xl mx-auto space-y-6 pb-12">
+        {/* Back Link */}
         <button
           onClick={() => navigate(`/projects/${projectId}`)}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-ink transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-ink transition-colors cursor-pointer"
         >
-          <ArrowLeft size={15} /> Back to Project Board
+          <ArrowLeft size={14} /> Back to Board
         </button>
 
-        {/* Overdue Warning */}
-        {isOverdue && (
-          <div className="flex items-center gap-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-2xl px-5 py-3.5 text-xs font-bold shadow-sm">
-            <AlertTriangle size={18} className="animate-pulse" />
-            <span>Task Overdue: Scheduled due date was {new Date(task.dueDate).toLocaleDateString()}</span>
-          </div>
-        )}
+        {/* Task Header Card */}
+        <div className="bg-surface border border-line rounded-3xl p-6 shadow-xl space-y-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${statusColors[task.status]}`}>
+                  {task.status}
+                </span>
+                <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${priorityColors[task.priority]}`}>
+                  {task.priority} Priority
+                </span>
+                {isOverdue && (
+                  <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center gap-1">
+                    <AlertTriangle size={11} /> Overdue
+                  </span>
+                )}
+              </div>
 
-        {/* Task Detail Card */}
-        <div className="bg-surface border border-line rounded-3xl p-7 shadow-sm">
-          <div className="flex items-start justify-between gap-4 mb-5">
-            {isEditing ? (
-              <input
-                className="flex-1 text-2xl font-extrabold font-display border-b-2 border-indigo-500 focus:outline-none bg-transparent text-ink"
-                value={editData.title}
-                onChange={(e) => setEditData({ ...editData, title: e.target.value })}
-              />
-            ) : (
-              <h1 className="font-display text-2xl font-extrabold text-ink flex-1 leading-snug">{task.title}</h1>
-            )}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="p-2 rounded-xl border border-line bg-canvas hover:border-indigo-500/30 text-slate-400 hover:text-ink transition-all cursor-pointer"
-                title="Edit Task"
-              >
-                <Edit3 size={16} />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="p-2 rounded-xl border border-line bg-canvas hover:border-rose-500/30 text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
-                title="Delete Task"
-              >
-                <Trash2 size={16} />
-              </button>
+              {isEditing ? (
+                <input
+                  value={editData.title}
+                  onChange={(e) => setEditData((p) => ({ ...p, title: e.target.value }))}
+                  className="w-full font-display font-extrabold text-xl border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none focus:border-indigo-500"
+                />
+              ) : (
+                <h1 className="font-display font-extrabold text-2xl text-ink tracking-tight">{task.title}</h1>
+              )}
+            </div>
+
+            {/* Manager / Owner Edit Actions */}
+            <div className="flex items-center gap-2">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-3 py-2 border border-line text-xs font-bold text-slate-400 rounded-xl hover:bg-canvas transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="p-2.5 border border-line rounded-xl text-slate-400 hover:text-ink hover:bg-canvas transition-colors cursor-pointer"
+                  >
+                    <Edit3 size={15} />
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="p-2.5 border border-rose-500/20 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Status + Priority + Due Date */}
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            {isEditing ? (
-              <>
-                <select
-                  value={editData.status}
-                  onChange={(e) => setEditData({ ...editData, status: e.target.value })}
-                  className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none"
-                >
-                  {STATUSES.map(s => <option key={s}>{s}</option>)}
-                </select>
-                <select
-                  value={editData.priority}
-                  onChange={(e) => setEditData({ ...editData, priority: e.target.value })}
-                  className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none"
-                >
-                  {PRIORITIES.map(p => <option key={p}>{p}</option>)}
-                </select>
-                <input
-                  type="date"
-                  value={editData.dueDate}
-                  onChange={(e) => setEditData({ ...editData, dueDate: e.target.value })}
-                  className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none"
-                />
-              </>
-            ) : (
-              <>
-                <span className={`text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider ${statusColors[task.status]}`}>
-                  {task.status}
-                </span>
-                <span className={`text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider ${priorityColors[task.priority]}`}>
-                  <Flag size={11} className="inline mr-1" />{task.priority} Priority
-                </span>
-                {task.dueDate && (
-                  <span className={`flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-bold ${isOverdue ? 'bg-rose-500/10 text-rose-500' : 'bg-slate-500/10 text-slate-400'}`}>
-                    <Calendar size={11} />
-                    {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </span>
-                )}
-              </>
-            )}
-          </div>
-
           {/* Description */}
-          <div className="mb-6">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Description</label>
+          <div className="pt-2 border-t border-line/60">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Description</h3>
             {isEditing ? (
               <textarea
-                rows={4}
+                rows={3}
                 value={editData.description}
-                onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                placeholder="Add task description..."
-                className="w-full text-xs font-medium border border-line rounded-2xl px-4 py-3 bg-canvas text-ink focus:outline-none resize-none"
+                onChange={(e) => setEditData((p) => ({ ...p, description: e.target.value }))}
+                className="w-full text-xs border border-line rounded-xl p-3 bg-canvas text-ink focus:outline-none focus:border-indigo-500"
               />
             ) : (
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-canvas p-4 rounded-2xl border border-line">
-                {task.description || <span className="text-slate-400 italic">No description provided for this task.</span>}
+              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                {task.description || 'No description provided.'}
               </p>
             )}
           </div>
 
-          {/* Tags */}
-          <div className="mb-6 pt-4 border-t border-line">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block flex items-center gap-1">
-              <Tag size={12} /> Tags
-            </label>
-            {isEditing ? (
-              <input
-                type="text"
-                placeholder="frontend, bug, api"
-                value={editData.tagsInput || ''}
-                onChange={(e) => setEditData({ ...editData, tagsInput: e.target.value })}
-                className="w-full text-xs font-medium border border-line rounded-xl px-4 py-2.5 bg-canvas text-ink focus:outline-none"
-              />
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {task.tags && task.tags.length > 0 ? (
-                  task.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 uppercase tracking-wider"
-                    >
-                      {tag}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-xs text-slate-400 italic">No tags added.</span>
-                )}
+          {/* Metadata Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-line/60 text-xs">
+            <div>
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
+                Assignee
+              </span>
+              <div className="flex items-center gap-1.5 font-bold text-ink">
+                <User size={13} className="text-indigo-400" />
+                <span>{task.assignee ? task.assignee.name : 'Unassigned'}</span>
               </div>
-            )}
+            </div>
+
+            <div>
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
+                Due Date
+              </span>
+              <div className="flex items-center gap-1.5 font-bold text-ink">
+                <Calendar size={13} className="text-amber-400" />
+                <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No Due Date'}</span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
+                Logged Hours
+              </span>
+              <div className="flex items-center gap-1.5 font-bold text-emerald-400">
+                <Clock size={13} />
+                <span>{task.loggedHours || 0} / {task.estimatedHours || 8} hrs</span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
+                Subtask Ratio
+              </span>
+              <div className="flex items-center gap-1.5 font-bold text-cyan-400">
+                <ListTodo size={13} />
+                <span>{completedSubtasks}/{subtasksList.length} Done</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ─── LIVE TIME TRACKER STOPWATCH CARD ─────────────────────────────────── */}
+        <div className="bg-surface border border-line rounded-3xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-indigo-400" />
+              <h2 className="font-display font-bold text-sm text-ink">Live Task Stopwatch Timer</h2>
+            </div>
+            <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+              {formatTimer(elapsedSeconds)}
+            </span>
           </div>
 
-          {/* Assignee */}
-          {task.assignee && (
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 bg-canvas px-4 py-2.5 rounded-xl border border-line w-fit">
-              <User size={14} className="text-indigo-500" />
-              <span>Assigned to: <span className="text-ink font-bold">{task.assignee.name || task.assignee}</span></span>
+          <div className="flex items-center gap-3">
+            {!isTimerRunning ? (
+              <button
+                onClick={() => setIsTimerRunning(true)}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-indigo-500/20"
+              >
+                <Play size={14} /> Start Timer
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsTimerRunning(false)}
+                className="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+              >
+                <Pause size={14} /> Pause Timer
+              </button>
+            )}
+
+            <button
+              onClick={handleSaveTimer}
+              disabled={elapsedSeconds === 0}
+              className="px-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+            >
+              <Save size={14} /> Log Hours
+            </button>
+          </div>
+        </div>
+
+        {/* ─── SUBTASKS CHECKLIST CARD ────────────────────────────────────────────── */}
+        <div className="bg-surface border border-line rounded-3xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ListTodo className="w-4 h-4 text-cyan-400" />
+              <h2 className="font-display font-bold text-sm text-ink">Subtasks Checklist</h2>
+            </div>
+            <span className="text-xs font-bold text-slate-400">
+              {completedSubtasks} of {subtasksList.length} completed
+            </span>
+          </div>
+
+          {/* Subtask Progress Bar */}
+          {subtasksList.length > 0 && (
+            <div className="w-full h-1.5 bg-line/60 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-400 to-indigo-500 transition-all duration-300"
+                style={{ width: `${(completedSubtasks / subtasksList.length) * 100}%` }}
+              />
             </div>
           )}
 
-          {/* Save / Cancel */}
-          {isEditing && (
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleSave}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
-              >
-                Save Changes
-              </button>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="text-xs font-bold text-slate-400 px-5 py-2.5 rounded-xl hover:bg-canvas transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
+          {subtasksList.length === 0 ? (
+            <p className="text-xs text-slate-400 font-medium italic">No subtasks added for this task.</p>
+          ) : (
+            <div className="space-y-2">
+              {subtasksList.map((st) => (
+                <button
+                  key={st._id}
+                  onClick={() => handleToggleSubtaskItem(st._id)}
+                  className={`w-full p-3 rounded-2xl border text-left text-xs font-medium flex items-center justify-between transition-all cursor-pointer ${
+                    st.isCompleted
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-slate-400 line-through'
+                      : 'bg-canvas border-line text-ink hover:border-indigo-500/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    {st.isCompleted ? (
+                      <CheckSquare size={16} className="text-emerald-400 shrink-0" />
+                    ) : (
+                      <Square size={16} className="text-slate-400 shrink-0" />
+                    )}
+                    <span>{st.title}</span>
+                  </div>
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Comments Section */}
-        <div className="bg-surface border border-line rounded-3xl p-7 shadow-sm">
-          <h2 className="font-display font-bold text-lg text-ink mb-5">
-            Comments Thread <span className="text-slate-400 font-normal text-xs">({comments.length})</span>
-          </h2>
+        {/* ─── COMMENTS & VOICE NOTES SECTION ───────────────────────────────────── */}
+        <div className="bg-surface border border-line rounded-3xl p-6 shadow-xl space-y-5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display font-bold text-sm text-ink">Comments & Voice Notes ({comments.length})</h2>
+          </div>
 
-          {/* Add Comment */}
-          <form onSubmit={handleAddComment} className="flex gap-3 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
-              {currentUser.name?.[0]?.toUpperCase() || 'U'}
-            </div>
-            <div className="flex-1 flex gap-2">
+          {/* Add Comment & Voice Note Bar */}
+          <form onSubmit={handleAddComment} className="space-y-3">
+            <div className="flex gap-2">
               <input
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Write a comment..."
-                className="flex-1 text-xs border border-line rounded-xl px-4 py-2.5 bg-canvas text-ink focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-medium"
+                className="flex-1 text-xs border border-line rounded-xl px-4 py-2.5 bg-canvas text-ink focus:outline-none focus:border-indigo-500"
               />
               <button
                 type="submit"
                 disabled={submitting || !newComment.trim()}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl transition-all disabled:opacity-40 cursor-pointer shadow-md shadow-indigo-500/20"
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all disabled:opacity-40 flex items-center gap-1.5 cursor-pointer shadow-md"
               >
-                <Send size={14} />
+                <Send size={13} /> Post
               </button>
+            </div>
+
+            {/* Voice Recorder Button */}
+            <div className="flex items-center gap-3 pt-1">
+              {!isRecording ? (
+                <button
+                  type="button"
+                  onClick={startVoiceRecording}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                >
+                  <Mic size={13} /> Record Voice Comment
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={stopVoiceRecording}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-400 bg-rose-500/20 border border-rose-500/30 px-3 py-1.5 rounded-xl transition-all animate-pulse cursor-pointer"
+                >
+                  <StopSquare size={13} /> Stop Recording ({recordingTime}s)
+                </button>
+              )}
             </div>
           </form>
 
-          {/* Comment List */}
-          {comments.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-6 border border-dashed border-line rounded-2xl bg-canvas italic">
-              No comments posted yet. Start the conversation!
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {comments.map((c) => (
-                <div key={c._id} className="flex gap-3 p-4 rounded-2xl bg-canvas border border-line">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 text-xs font-bold shrink-0">
-                    {c.author?.name?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-ink">{c.author?.name || 'User'}</span>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{c.text}</p>
-                  </div>
-                  {c.author?._id === currentUser.id && (
-                    <button
-                      onClick={() => handleDeleteComment(c._id)}
-                      className="text-slate-400 hover:text-rose-500 p-1 rounded-lg transition-colors shrink-0 cursor-pointer"
-                      title="Delete comment"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
+          {/* Comments List */}
+          <div className="space-y-3 pt-2">
+            {comments.map((c) => (
+              <div key={c._id} className="bg-canvas border border-line/60 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-ink">{c.author?.name || 'User'}</span>
+                  <span className="text-[10px] text-slate-400">{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
-              ))}
-            </div>
-          )}
+
+                {c.text && <p className="text-xs text-slate-300 font-medium">{c.text}</p>}
+
+                {/* Inline Voice Note Audio Player */}
+                {c.audioUrl && (
+                  <div className="flex items-center gap-2 p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl mt-2">
+                    <Volume2 size={16} className="text-indigo-400 shrink-0" />
+                    <audio controls src={c.audioUrl} className="w-full h-8" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </DashboardLayout>
