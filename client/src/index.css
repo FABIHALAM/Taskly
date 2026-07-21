@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Outfit", sans-serif;
-  --font-body: "Plus Jakarta Sans", sans-serif;
+  --font-display: "Outfit", "Inter", sans-serif;
+  --font-body: "Inter", "Plus Jakarta Sans", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
   --color-ink: #0f172a;
@@ -23,33 +23,34 @@ body {
   color: var(--color-ink);
   transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-x: hidden;
+  letter-spacing: -0.011em;
 }
 
-/* Dark mode theme variables - Brightened Slate-Indigo Tones */
+/* Dark mode theme variables - Ultra-Clean Slate/Indigo Tones */
 .dark {
   --color-ink: #f8fafc;
-  --color-canvas: #0e0f17;
-  --color-surface: #171926;
-  --color-sidebar: #090a12;
-  --color-line: #26293d;
+  --color-canvas: #0d0e17;
+  --color-surface: #151726;
+  --color-sidebar: #080912;
+  --color-line: #24273d;
   --color-primary-soft: #1e1b4b;
 }
 
-/* Sophisticated Universal Background Grid & Ambient Mesh Effect */
+/* Sophisticated Universal Background Radial Dot Pattern & Gradient Mesh */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(rgba(99, 102, 241, 0.12) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background-image: radial-gradient(rgba(129, 140, 248, 0.18) 1px, transparent 1px);
+  background-size: 26px 26px;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .dark body::before {
-  background-image: radial-gradient(rgba(129, 140, 248, 0.15) 1px, transparent 1px);
-  opacity: 0.8;
+  background-image: radial-gradient(rgba(129, 140, 248, 0.2) 1px, transparent 1px);
+  opacity: 0.85;
 }
 
 .dark body::after {
@@ -57,45 +58,52 @@ body::before {
   position: fixed;
   top: -15%;
   right: -5%;
-  width: 700px;
-  height: 700px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(56, 189, 248, 0.06) 40%, transparent 70%);
+  width: 750px;
+  height: 750px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, rgba(56, 189, 248, 0.07) 40%, transparent 70%);
   pointer-events: none;
   z-index: 0;
-  filter: blur(90px);
+  filter: blur(100px);
 }
 
-/* Glassmorphism utility classes */
+/* Glassmorphism 2.0 Utility Classes with Top Highlight Border */
 .glass-panel {
   background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .dark .glass-panel {
-  background: rgba(23, 25, 38, 0.8);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(21, 23, 38, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-/* Glowing card effect on hover */
+/* High-Class Hover Lift & Micro-Shadow Interactions */
 .glow-card {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glow-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 14px 35px -10px rgba(99, 102, 241, 0.18);
 }
 
 .dark .glow-card:hover {
-  border-color: rgba(129, 140, 248, 0.4);
-  box-shadow: 0 12px 35px -10px rgba(99, 102, 241, 0.25), 0 0 15px rgba(99, 102, 241, 0.1);
+  border-color: rgba(129, 140, 248, 0.45);
+  box-shadow: 0 16px 40px -10px rgba(99, 102, 241, 0.3), 0 0 20px rgba(99, 102, 241, 0.12);
 }
 
-/* Custom scrollbars */
+/* Button Micro Scale Effect */
+button:active, a:active {
+  transform: scale(0.98);
+}
+
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
