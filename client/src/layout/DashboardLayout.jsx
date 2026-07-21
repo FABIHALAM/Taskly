@@ -6,6 +6,7 @@ import { getNotifications, markAllRead } from '../services/notificationService'
 import api from '../services/api'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
+import CommandPalette from '../components/CommandPalette'
 
 function DashboardLayout({ children }) {
   const navigate = useNavigate()
@@ -15,6 +16,9 @@ function DashboardLayout({ children }) {
 
   // Role pill text
   const isManager = user.role === 'manager' || user.role === 'admin'
+
+  // Command Palette State
+  const [isCmdPaletteOpen, setIsCmdPaletteOpen] = useState(false)
 
   // Notification States
   const [notifications, setNotifications] = useState([])
@@ -198,20 +202,15 @@ function DashboardLayout({ children }) {
         {/* Top Header */}
         <header className="h-16 border-b border-line px-8 flex items-center justify-between bg-surface/80 backdrop-blur-xl sticky top-0 z-10 shadow-sm transition-colors">
           {/* Quick Search */}
-          <div className="relative w-80" ref={searchRef}>
+          <div className="relative w-80 cursor-pointer" onClick={() => setIsCmdPaletteOpen(true)} ref={searchRef}>
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
               <Search size={15} />
             </div>
             <input
               type="text"
-              placeholder="Search tasks, projects... (min 2 chars)"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setShowSearch(true)
-              }}
-              onFocus={() => setShowSearch(true)}
-              className="w-full text-xs border border-line rounded-xl pl-9 pr-8 py-2 bg-canvas focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all font-medium"
+              readOnly
+              placeholder="Search or type command... (Ctrl+K)"
+              className="w-full text-xs border border-line rounded-xl pl-9 pr-8 py-2 bg-canvas focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all font-medium cursor-pointer"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 bg-surface px-1.5 py-0.5 rounded border border-line">
               ⌘K
@@ -372,6 +371,8 @@ function DashboardLayout({ children }) {
         {/* Content area */}
         <main className="flex-1 p-8 bg-canvas relative">{children}</main>
       </div>
+
+      <CommandPalette isOpen={isCmdPaletteOpen} onClose={(val) => setIsCmdPaletteOpen(typeof val === 'boolean' ? val : false)} />
     </div>
   )
 }

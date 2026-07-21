@@ -18,6 +18,9 @@ import {
   ShieldCheck,
   Clock,
   ListTodo,
+  History,
+  AlertCircle,
+  Zap,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
@@ -30,9 +33,9 @@ import { getProjectById, addMember, removeMember } from '../services/projectServ
 import AppLoader from '../components/AppLoader'
 
 const COLUMNS = [
-  { key: 'To Do', color: 'border-t-slate-400', bg: 'bg-slate-500/5', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-300' },
-  { key: 'In Progress', color: 'border-t-indigo-500', bg: 'bg-indigo-500/5', badge: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
-  { key: 'Done', color: 'border-t-emerald-500', bg: 'bg-emerald-500/5', badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+  { key: 'To Do', color: 'border-t-slate-400', bg: 'bg-slate-500/5', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-300', wipLimit: 10 },
+  { key: 'In Progress', color: 'border-t-indigo-500', bg: 'bg-indigo-500/5', badge: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400', wipLimit: 3 },
+  { key: 'Done', color: 'border-t-emerald-500', bg: 'bg-emerald-500/5', badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', wipLimit: null },
 ]
 
 const PRIORITY_STYLE = {
@@ -53,8 +56,9 @@ function ProjectDetails() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState(null)
   const [priorityFilter, setPriorityFilter] = useState('')
+  const [sprintFilter, setSprintFilter] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
-  const [viewMode, setViewMode] = useState('board')
+  const [viewMode, setViewMode] = useState('board') // 'board' | 'timeline' | 'activity'
 
   // Members Drawer state
   const [showMembers, setShowMembers] = useState(false)
@@ -281,6 +285,14 @@ function ProjectDetails() {
               >
                 <AlignLeft size={14} /> Timeline
               </button>
+              <button
+                onClick={() => setViewMode('activity')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  viewMode === 'activity' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-ink'
+                }`}
+              >
+                <History size={14} /> Activity
+              </button>
             </div>
 
             {/* Create Task (Manager only) */}
@@ -313,7 +325,7 @@ function ProjectDetails() {
           </div>
         </div>
 
-        {/* Filters Bar */}
+        {/* Filters Bar & Sprint Selector */}
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-surface p-4 border border-line rounded-2xl">
           <input
             type="text"
@@ -323,18 +335,36 @@ function ProjectDetails() {
             className="w-full sm:w-64 text-xs font-medium border border-line rounded-xl px-3.5 py-2 bg-canvas text-ink focus:outline-none focus:border-indigo-500"
           />
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <span className="text-xs font-bold text-slate-400">Filter Priority:</span>
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none cursor-pointer"
-            >
-              <option value="">All Priorities</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
+          <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
+            {/* Sprint Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-400">Sprint:</span>
+              <select
+                value={sprintFilter}
+                onChange={(e) => setSprintFilter(e.target.value)}
+                className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none cursor-pointer"
+              >
+                <option value="All">All Sprints</option>
+                <option value="Sprint 1">Sprint 1 — Core Auth & Setup</option>
+                <option value="Sprint 2">Sprint 2 — Real-time Engine</option>
+                <option value="Sprint 3">Sprint 3 — Release Candidate</option>
+              </select>
+            </div>
+
+            {/* Priority Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-400">Priority:</span>
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="text-xs font-semibold border border-line rounded-xl px-3 py-2 bg-canvas text-ink focus:outline-none cursor-pointer"
+              >
+                <option value="">All Priorities</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -344,6 +374,7 @@ function ProjectDetails() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {COLUMNS.map((col) => {
                 const colTasks = filteredTasks.filter((t) => t.status === col.key)
+                const isWipExceeded = col.wipLimit !== null && colTasks.length > col.wipLimit
 
                 return (
                   <div key={col.key} className={`flex flex-col rounded-3xl border border-line ${col.bg} p-4 min-h-[500px]`}>
@@ -351,9 +382,15 @@ function ProjectDetails() {
                       <span className="font-display font-bold text-sm text-ink flex items-center gap-2">
                         <span>{col.key}</span>
                         <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full ${col.badge}`}>
-                          {colTasks.length}
+                          {colTasks.length}{col.wipLimit ? ` / ${col.wipLimit} max` : ''}
                         </span>
                       </span>
+
+                      {isWipExceeded && (
+                        <span className="text-[10px] font-bold text-rose-500 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <AlertCircle size={10} /> WIP Limit Exceeded
+                        </span>
+                      )}
                     </div>
 
                     <Droppable droppableId={col.key}>
@@ -495,6 +532,43 @@ function ProjectDetails() {
                 )
               })
             )}
+          </div>
+        )}
+
+        {/* ─── PROJECT ACTIVITY AUDIT FEED TAB ──────────────────────────────────── */}
+        {viewMode === 'activity' && (
+          <div className="bg-surface border border-line rounded-3xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <h2 className="font-display font-bold text-base text-ink flex items-center gap-2">
+                <History className="text-indigo-500" size={18} /> Project Activity Audit Trail
+              </h2>
+              <span className="text-xs text-slate-400 font-medium">Real-time team audit log</span>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              {tasks.length === 0 ? (
+                <p className="text-xs text-slate-400 italic text-center py-8">No activities recorded yet.</p>
+              ) : (
+                tasks.map((t) => (
+                  <div key={t._id} className="flex items-start gap-3 p-3.5 rounded-2xl bg-canvas border border-line text-xs">
+                    <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 shrink-0">
+                      <Zap size={15} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-ink">
+                        Task <span className="text-indigo-400 font-mono">"{t.title}"</span> updated
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Assigned to: <strong className="text-slate-300">{t.assignee ? t.assignee.name : 'Unassigned'}</strong> • Status: <span className="font-bold text-cyan-400">{t.status}</span>
+                      </p>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                      {new Date(t.updatedAt || t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
 

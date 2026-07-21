@@ -69,6 +69,7 @@ function TaskDetail() {
   const recordingIntervalRef = useRef(null)
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+  const isManager = currentUser.role === 'manager' || currentUser.role === 'admin'
 
   const loadTask = async () => {
     try {
@@ -310,38 +311,46 @@ function TaskDetail() {
               )}
             </div>
 
-            {/* Manager / Owner Edit Actions */}
+            {/* Manager vs Member Action Badge */}
             <div className="flex items-center gap-2">
-              {isEditing ? (
-                <>
-                  <button
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md"
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-3 py-2 border border-line text-xs font-bold text-slate-400 rounded-xl hover:bg-canvas transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </>
+              {isManager ? (
+                isEditing ? (
+                  <>
+                    <button
+                      onClick={handleSave}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="px-3 py-2 border border-line text-xs font-bold text-slate-400 rounded-xl hover:bg-canvas transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="p-2.5 border border-line rounded-xl text-slate-400 hover:text-ink hover:bg-canvas transition-colors cursor-pointer"
+                      title="Edit Task (Manager Only)"
+                    >
+                      <Edit3 size={15} />
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      className="p-2.5 border border-rose-500/20 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer"
+                      title="Delete Task (Manager Only)"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </>
+                )
               ) : (
-                <>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="p-2.5 border border-line rounded-xl text-slate-400 hover:text-ink hover:bg-canvas transition-colors cursor-pointer"
-                  >
-                    <Edit3 size={15} />
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="p-2.5 border border-rose-500/20 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </>
+                <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                  <UserCheck size={13} /> Member Execution Mode
+                </span>
               )}
             </div>
           </div>
