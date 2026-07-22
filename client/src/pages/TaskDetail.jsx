@@ -22,6 +22,7 @@ import {
   Square as StopSquare,
   Volume2,
   ListTodo,
+  MessageSquare,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import DashboardLayout from '../layout/DashboardLayout'
@@ -505,10 +506,20 @@ function TaskDetail() {
           )}
         </div>
 
-        {/* ─── COMMENTS & VOICE NOTES SECTION ───────────────────────────────────── */}
+        {/* ─── MANAGER ↔ MEMBER DEDICATED TASK CHAT SECTION ─────────────────────── */}
         <div className="bg-surface border border-line rounded-3xl p-6 shadow-xl space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display font-bold text-sm text-ink">Comments & Voice Notes ({comments.length})</h2>
+          <div className="flex items-center justify-between border-b border-line pb-3">
+            <div>
+              <h2 className="font-display font-bold text-base text-ink flex items-center gap-2">
+                <MessageSquare className="text-cyan-400" size={18} /> Manager ↔ Assignee Direct Conversation
+              </h2>
+              <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                Dedicated task discussion thread for Manager & Assignee ({task.assignee ? task.assignee.name : 'Unassigned'}).
+              </p>
+            </div>
+            <span className="text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
+              {comments.length} Messages
+            </span>
           </div>
 
           {/* Add Comment & Voice Note Bar */}
@@ -517,15 +528,15 @@ function TaskDetail() {
               <input
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Write a comment..."
+                placeholder="Write a message to manager/assignee..."
                 className="flex-1 text-xs border border-line rounded-xl px-4 py-2.5 bg-canvas text-ink focus:outline-none focus:border-indigo-500"
               />
               <button
                 type="submit"
                 disabled={submitting || !newComment.trim()}
-                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all disabled:opacity-40 flex items-center gap-1.5 cursor-pointer shadow-md"
+                className="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-xs rounded-xl transition-all disabled:opacity-40 flex items-center gap-1.5 cursor-pointer shadow-md"
               >
-                <Send size={13} /> Post
+                <Send size={13} /> Send
               </button>
             </div>
 
@@ -537,7 +548,7 @@ function TaskDetail() {
                   onClick={startVoiceRecording}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
                 >
-                  <Mic size={13} /> Record Voice Comment
+                  <Mic size={13} /> Record Voice Message
                 </button>
               ) : (
                 <button
@@ -551,26 +562,53 @@ function TaskDetail() {
             </div>
           </form>
 
-          {/* Comments List */}
+          {/* Comments / Messages List with Role Badges */}
           <div className="space-y-3 pt-2">
-            {comments.map((c) => (
-              <div key={c._id} className="bg-canvas border border-line/60 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-ink">{c.author?.name || 'User'}</span>
-                  <span className="text-[10px] text-slate-400">{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
+            {comments.length === 0 ? (
+              <p className="text-xs text-slate-400 italic text-center py-6">No discussion messages yet. Start the conversation!</p>
+            ) : (
+              comments.map((c) => {
+                const authorRole = c.author?.role
+                const isAssignee = task.assignee && (c.author?._id === task.assignee._id || c.author?.id === task.assignee._id)
+                const isTaskOwner = authorRole === 'manager' || authorRole === 'admin'
 
-                {c.text && <p className="text-xs text-slate-300 font-medium">{c.text}</p>}
+                return (
+                  <div key={c._id} className="bg-canvas border border-line/60 rounded-2xl p-4 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-ink font-display">{c.author?.name || 'User'}</span>
+                        {isTaskOwner ? (
+                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                            👔 Manager
+                          </span>
+                        ) : isAssignee ? (
+                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            👷 Assignee
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-300 border border-slate-500/30">
+                            👤 Member
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
 
-                {/* Inline Voice Note Audio Player */}
-                {c.audioUrl && (
-                  <div className="flex items-center gap-2 p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl mt-2">
-                    <Volume2 size={16} className="text-indigo-400 shrink-0" />
-                    <audio controls src={c.audioUrl} className="w-full h-8" />
+                    {c.text && <p className="text-xs text-slate-300 font-medium leading-relaxed">{c.text}</p>}
+
+                    {/* Inline Voice Note Audio Player */}
+                    {c.audioUrl && (
+                      <div className="flex items-center gap-2 p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl mt-2">
+                        <Volume2 size={16} className="text-cyan-400 shrink-0" />
+                        <audio controls src={c.audioUrl} className="w-full h-8" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                )
+              })
+            )}
           </div>
         </div>
       </div>

@@ -27,16 +27,22 @@ const generateRefreshToken = (userId) =>
  */
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body
+    const { name, email, password, managerKey } = req.body
 
-    // Read role directly and safely — never rely on destructuring alone
     const rawRole = req.body.role
-    const allowedRoles = ['manager', 'member']
-    const assignedRole = (typeof rawRole === 'string' && allowedRoles.includes(rawRole.trim().toLowerCase()))
-      ? rawRole.trim().toLowerCase()
-      : 'member'
+    let assignedRole = 'member'
 
-    const existingUser = await User.findOne({ email })
+    // Public register security: Manager role requires valid secret Manager Key
+    if (typeof rawRole === 'string' && rawRole.trim().toLowerCase() === 'manager') {
+      const validKey = process.env.MANAGER_SECRET_KEY || 'TASKLY-MGR-2026'
+      if (managerKey && managerKey.trim() === validKey) {
+        assignedRole = 'manager'
+      } else {
+        return sendError(res, 403, 'Invalid Workspace Manager Secret Key! Unable to register as Manager.')
+      }
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() })
     if (existingUser) {
       return sendError(res, 400, 'User already exists')
     }
@@ -45,10 +51,11 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt)
 
     const newUser = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
       password: hashedPassword,
       role: assignedRole,
+      status: 'Active',
     })
 
     return sendSuccess(res, 201, 'User registered successfully', {
@@ -72,9 +79,13 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email: email.toLowerCase().trim() })
     if (!user) {
       return sendError(res, 400, 'Invalid email or password')
+    }
+
+    if (user.status === 'Suspended') {
+      return sendError(res, 403, 'Your account has been suspended by Super Admin. Please contact workspace support.')
     }
 
     const isMatch = await bcrypt.compare(password, user.password)

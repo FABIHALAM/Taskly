@@ -16,6 +16,7 @@ const commentRoutes = require('./routes/commentRoutes')
 const notificationRoutes = require('./routes/notificationRoutes')
 const searchRoutes = require('./routes/searchRoutes')
 const analyticsRoutes = require('./routes/analyticsRoutes')
+const adminRoutes = require('./routes/adminRoutes')
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -43,6 +44,7 @@ app.use('/api/comments', commentRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/admin', adminRoutes)
 
 app.get('/', (req, res) => {
   res.send('Taskly API — visit /api-docs for documentation')

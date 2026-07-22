@@ -108,6 +108,7 @@ function DashboardLayout({ children }) {
 
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    ...(user.role === 'admin' ? [{ label: 'Super Admin', path: '/admin/dashboard', icon: Crown }] : []),
     { label: 'Projects', path: '/projects', icon: FolderKanban },
     { label: 'Profile', path: '/profile', icon: User },
     { label: 'Settings', path: '/settings', icon: Settings },

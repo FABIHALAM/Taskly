@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import TaskDetail from './pages/TaskDetail'
+import AdminDashboard from './pages/AdminDashboard'
 import AppLoader from './components/AppLoader'
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
           <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
           <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
           <Route path="/projects/:id/tasks/:taskId" element={<ProtectedRoute><TaskDetail /></ProtectedRoute>} />
+          <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Routes>

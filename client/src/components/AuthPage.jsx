@@ -13,6 +13,7 @@ export function AuthPage({ defaultMode = 'login' }) {
   const isRegister = location.pathname === '/register' || defaultMode === 'register'
 
   const [selectedRole, setSelectedRole] = useState('member')
+  const [managerKey, setManagerKey] = useState('')
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0)
 
   const {
@@ -54,7 +55,7 @@ export function AuthPage({ defaultMode = 'login' }) {
   const onSubmit = async (data) => {
     try {
       if (isRegister) {
-        await registerUser({ ...data, role: selectedRole })
+        await registerUser({ ...data, role: selectedRole, managerKey })
         toast.success('Account created! Please sign in.')
         navigate('/login')
       } else {
@@ -278,6 +279,25 @@ export function AuthPage({ defaultMode = 'login' }) {
                       )}
                     </button>
                   </div>
+
+                  {selectedRole === 'manager' && (
+                    <div className="pt-2">
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-cyan-300 mb-1">
+                        Workspace Manager Secret Key
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="Enter Manager Secret Key (e.g. TASKLY-MGR-2026)"
+                        value={managerKey}
+                        onChange={(e) => setManagerKey(e.target.value)}
+                        className="w-full text-xs font-mono font-bold border border-cyan-400/40 rounded-xl px-3.5 py-2 bg-[#18113b] text-cyan-200 placeholder-slate-400 focus:outline-none focus:border-cyan-400"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1 italic">
+                        🛡️ Manager role requires Super Admin authorization key.
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
