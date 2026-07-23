@@ -7,16 +7,25 @@ const mongoose = require('mongoose')
 const { MongoMemoryServer } = require('mongodb-memory-server')
 const app = require('../server')
 
+process.env.MONGOMS_SEARCH_TIMEOUT = '60000'
+process.env.MONGOMS_DOWNLOAD_TIMEOUT = '60000'
+
+jest.setTimeout(60000)
+
 let mongoServer
 let accessToken
 let projectId
 let taskId
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create()
-  // Disconnect from any existing connection then use in-memory
   await mongoose.disconnect()
-  await mongoose.connect(mongoServer.getUri())
+  try {
+    mongoServer = await MongoMemoryServer.create({ instance: { launchTimeoutMS: 60000 } })
+    await mongoose.connect(mongoServer.getUri())
+  } catch (err) {
+    console.warn('⚠️ MongoMemoryServer startup fallback to MONGO_URI:', err.message)
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.01:27017/taskly_test')
+  }
 
   // Register + login to get token
   await request(app).post('/api/auth/register').send({

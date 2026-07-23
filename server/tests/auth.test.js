@@ -9,12 +9,23 @@ const { MongoMemoryServer } = require('mongodb-memory-server')
 const express = require('express')
 const authRoutes = require('../routes/authRoutes')
 
+process.env.MONGOMS_SEARCH_TIMEOUT = '60000'
+process.env.MONGOMS_DOWNLOAD_TIMEOUT = '60000'
+
+jest.setTimeout(60000)
+
 let app
 let mongoServer
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create()
-  await mongoose.connect(mongoServer.getUri())
+  await mongoose.disconnect()
+  try {
+    mongoServer = await MongoMemoryServer.create({ instance: { launchTimeoutMS: 60000 } })
+    await mongoose.connect(mongoServer.getUri())
+  } catch (err) {
+    console.warn('⚠️ MongoMemoryServer startup fallback to MONGO_URI:', err.message)
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.01:27017/taskly_test')
+  }
 
   app = express()
   app.use(express.json())
