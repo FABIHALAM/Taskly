@@ -35,6 +35,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'Engineering',
     },
+    avatar: {
+      type: String,
+      default: '',
+    },
+    bio: {
+      type: String,
+      default: '',
+    },
+    phone: {
+      type: String,
+      default: '',
+    },
     isTemporaryPassword: {
       type: Boolean,
       default: false,
@@ -42,6 +54,14 @@ const userSchema = new mongoose.Schema(
     lastLogin: {
       type: Date,
       default: Date.now,
+    },
+    lastLoginLocation: {
+      type: String,
+      default: 'Lahore, Pakistan',
+    },
+    lastLoginIp: {
+      type: String,
+      default: '127.0.0.1',
     },
     refreshToken: {
       type: String,

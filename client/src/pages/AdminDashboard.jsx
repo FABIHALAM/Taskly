@@ -38,6 +38,7 @@ function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [activeTab, setActiveTab] = useState('users') // 'users' | 'analytics'
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState(null)
 
   // Create User Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -273,7 +274,7 @@ function AdminDashboard() {
                   <thead className="bg-canvas/50 border-b border-line text-slate-400 uppercase tracking-wider font-bold">
                     <tr>
                       <th className="px-6 py-4">User Info</th>
-                      <th className="px-6 py-4">Last Login</th>
+                      <th className="px-6 py-4">Last Login & Location</th>
                       <th className="px-6 py-4">Current Active Work & Deadline</th>
                       <th className="px-6 py-4">Role</th>
                       <th className="px-6 py-4">Status</th>
@@ -293,24 +294,43 @@ function AdminDashboard() {
                         const task = u.currentTask
 
                         return (
-                          <tr key={u._id} className="hover:bg-canvas/40 transition-colors">
+                          <tr
+                            key={u._id}
+                            onClick={() => setSelectedUserForDetails(u)}
+                            className="hover:bg-canvas/40 transition-colors cursor-pointer group"
+                          >
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-sm uppercase">
-                                  {u.name ? u.name[0] : 'U'}
-                                </div>
+                                {u.avatar ? (
+                                  <img
+                                    src={u.avatar}
+                                    alt={u.name}
+                                    className="w-9 h-9 rounded-full object-cover border border-indigo-500/30"
+                                  />
+                                ) : (
+                                  <div className="w-9 h-9 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-sm uppercase">
+                                    {u.name ? u.name[0] : 'U'}
+                                  </div>
+                                )}
                                 <div>
-                                  <p className="font-bold text-ink font-display">{u.name}</p>
+                                  <p className="font-bold text-ink font-display group-hover:text-indigo-400 transition-colors">
+                                    {u.name}
+                                  </p>
                                   <p className="text-[11px] text-slate-400">{u.email}</p>
                                 </div>
                               </div>
                             </td>
 
                             <td className="px-6 py-4">
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-300 bg-canvas px-2.5 py-1 rounded-lg border border-line">
-                                <Clock size={11} className="text-cyan-400" />
-                                {formatLastLogin(u.lastLogin)}
-                              </span>
+                              <div className="space-y-1">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-300 bg-canvas px-2.5 py-0.5 rounded-lg border border-line">
+                                  <Clock size={11} className="text-cyan-400" />
+                                  {formatLastLogin(u.lastLogin)}
+                                </span>
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono">
+                                  <span className="text-emerald-400 font-bold">📍 {u.lastLoginLocation || 'Lahore, PK'}</span>
+                                </div>
+                              </div>
                             </td>
 
                             <td className="px-6 py-4">
@@ -604,6 +624,87 @@ function AdminDashboard() {
                       </button>
                     </div>
                   </form>
+                )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ─── USER BIO DATA & ACCOUNT INSPECTION DRAWER MODAL ───────────── */}
+        <AnimatePresence>
+          {selectedUserForDetails && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-surface border border-line rounded-3xl p-6 shadow-2xl w-full max-w-lg space-y-5"
+              >
+                <div className="flex items-center justify-between border-b border-line pb-3">
+                  <h3 className="font-display font-bold text-lg text-ink flex items-center gap-2">
+                    <User size={20} className="text-indigo-400" /> Employee Bio Data & Profile Overview
+                  </h3>
+                  <button onClick={() => setSelectedUserForDetails(null)} className="text-slate-400 hover:text-ink">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="flex flex-col items-center text-center space-y-3 p-4 bg-canvas rounded-2xl border border-line">
+                  {selectedUserForDetails.avatar ? (
+                    <img
+                      src={selectedUserForDetails.avatar}
+                      alt={selectedUserForDetails.name}
+                      className="w-20 h-20 rounded-full object-cover border-2 border-indigo-500/40 shadow-md"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 border-2 border-surface shadow-md flex items-center justify-center text-white text-2xl font-extrabold font-display">
+                      {selectedUserForDetails.name ? selectedUserForDetails.name[0] : 'U'}
+                    </div>
+                  )}
+
+                  <div>
+                    <h4 className="font-display font-extrabold text-lg text-ink">{selectedUserForDetails.name}</h4>
+                    <p className="text-xs text-slate-400">{selectedUserForDetails.email}</p>
+                    {selectedUserForDetails.bio && (
+                      <p className="text-xs text-slate-300 italic mt-2 px-4">"{selectedUserForDetails.bio}"</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-canvas border border-line">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Assigned Role</span>
+                    <span className="font-bold text-ink capitalize mt-0.5 block">{selectedUserForDetails.role}</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-canvas border border-line">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Department</span>
+                    <span className="font-bold text-ink mt-0.5 block">{selectedUserForDetails.department || 'Engineering'}</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-canvas border border-line">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Phone Contact</span>
+                    <span className="font-bold text-ink mt-0.5 block">{selectedUserForDetails.phone || 'Not provided'}</span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-canvas border border-line">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Account Status</span>
+                    <span className={`font-bold mt-0.5 block ${selectedUserForDetails.status === 'Suspended' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                      {selectedUserForDetails.status || 'Active'}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedUserForDetails.currentTask && (
+                  <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs space-y-1">
+                    <span className="text-[10px] text-indigo-300 font-bold uppercase block tracking-wider">
+                      Current Assigned Active Task
+                    </span>
+                    <p className="font-bold text-white text-sm">{selectedUserForDetails.currentTask.title}</p>
+                    <p className="text-[11px] text-slate-300">
+                      Workspace: <strong>{selectedUserForDetails.currentTask.projectName}</strong> • Status: <strong className="text-cyan-300">{selectedUserForDetails.currentTask.status}</strong>
+                    </p>
+                  </div>
                 )}
               </motion.div>
             </div>

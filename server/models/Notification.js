@@ -24,6 +24,7 @@ const notificationSchema = new mongoose.Schema(
         'comment_added',
         'member_added',
         'task_overdue',
+        'user_login',
       ],
       required: true,
     },
@@ -34,7 +35,7 @@ const notificationSchema = new mongoose.Schema(
     // Reference to the related resource
     targetType: {
       type: String,
-      enum: ['Task', 'Project', 'Comment'],
+      enum: ['Task', 'Project', 'Comment', 'User'],
     },
     targetId: {
       type: mongoose.Schema.Types.ObjectId,
