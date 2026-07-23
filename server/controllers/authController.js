@@ -96,8 +96,9 @@ const loginUser = async (req, res) => {
     const accessToken  = generateAccessToken(user._id)
     const refreshToken = generateRefreshToken(user._id)
 
-    // Persist the refresh token in the DB (allows server-side revocation)
+    // Persist the refresh token & update last login timestamp in DB
     user.refreshToken = refreshToken
+    user.lastLogin = new Date()
     await user.save()
 
     return sendSuccess(res, 200, 'Login successful', {

@@ -4,17 +4,50 @@ const User = require('../models/User')
 const { sendSuccess, sendError } = require('../utils/response')
 const { sendWelcomeCredentialsEmail } = require('../utils/emailService')
 
+const Task = require('../models/Task')
+
 /**
  * @route   GET /api/admin/users
  * @access  Protected (Super Admin Only)
- * Get all users with their roles, department, and account status.
+ * Get all users with their roles, department, account status, last login, and current active task/deadline.
  */
 const getAllUsersAdmin = async (req, res) => {
   try {
     const users = await User.find()
       .select('-password -refreshToken')
       .sort({ createdAt: -1 })
-    return sendSuccess(res, 200, 'All workspace users fetched', users)
+      .lean()
+
+    // Fetch active task & deadline for each user
+    const usersWithWork = await Promise.all(
+      users.map(async (u) => {
+        const activeTask = await Task.findOne({
+          assignee: u._id,
+          status: { $in: ['To Do', 'In Progress'] },
+          isArchived: false,
+        })
+          .populate('project', 'name')
+          .sort({ updatedAt: -1 })
+          .lean()
+
+        return {
+          ...u,
+          currentTask: activeTask
+            ? {
+                id: activeTask._id,
+                title: activeTask.title,
+                status: activeTask.status,
+                priority: activeTask.priority,
+                dueDate: activeTask.dueDate,
+                projectName: activeTask.project?.name || 'Workspace',
+                isOverdue: activeTask.dueDate && new Date(activeTask.dueDate) < new Date(),
+              }
+            : null,
+        }
+      })
+    )
+
+    return sendSuccess(res, 200, 'All workspace users fetched', usersWithWork)
   } catch (error) {
     return sendError(res, 500, 'Server error', error.message)
   }
