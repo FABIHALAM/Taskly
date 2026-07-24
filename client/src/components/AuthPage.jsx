@@ -5,7 +5,7 @@ import { loginUser, registerUser } from '../services/authService'
 import api from '../services/api'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Mail, Lock, User, Crown, UserCheck, Check, Sparkles, LayoutGrid, AlignLeft, ShieldCheck, Zap } from 'lucide-react'
+import { ArrowRight, Mail, Lock, User, Crown, UserCheck, Check, Sparkles, LayoutGrid, AlignLeft, ShieldCheck, Zap, Eye, EyeOff } from 'lucide-react'
 
 export function AuthPage({ defaultMode = 'login' }) {
   const navigate = useNavigate()
@@ -14,6 +14,7 @@ export function AuthPage({ defaultMode = 'login' }) {
 
   const [selectedRole, setSelectedRole] = useState('member')
   const [managerKey, setManagerKey] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0)
 
   const {
@@ -360,14 +361,21 @@ export function AuthPage({ defaultMode = 'login' }) {
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   {...regInput('password', {
                     required: 'Password is required',
                     minLength: { value: 6, message: 'Minimum 6 characters' }
                   })}
-                  className="w-full bg-[#291f54] border border-white/20 rounded-xl pl-10 pr-4 py-3 text-white placeholder-slate-400 text-xs font-medium focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-all"
+                  className="w-full bg-[#291f54] border border-white/20 rounded-xl pl-10 pr-10 py-3 text-white placeholder-slate-400 text-xs font-medium focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-all"
                   placeholder="••••••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer p-1"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
               {errors.password && <p className="text-rose-300 text-xs mt-1 font-medium">{errors.password.message}</p>}
             </div>

@@ -20,6 +20,9 @@ import {
   TrendingUp,
   Activity,
   PieChart,
+  User,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'

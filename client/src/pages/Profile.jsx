@@ -14,6 +14,8 @@ import {
   Phone,
   FileText,
   Lock,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import DashboardLayout from '../layout/DashboardLayout'
 import { getDashboardAnalytics } from '../services/analyticsService'
@@ -26,6 +28,7 @@ function Profile() {
   const [stats, setStats] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const [formData, setFormData] = useState({
     name: user.name || '',
@@ -261,13 +264,22 @@ function Profile() {
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                       New Password (Optional)
                     </label>
-                    <input
-                      type="password"
-                      placeholder="Leave blank to keep existing password"
-                      value={formData.password}
-                      onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
-                      className="w-full text-xs font-medium border border-line rounded-xl px-3.5 py-2.5 bg-canvas text-ink focus:outline-none focus:border-indigo-500"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Leave blank to keep existing password"
+                        value={formData.password}
+                        onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
+                        className="w-full text-xs font-medium border border-line rounded-xl pl-3.5 pr-10 py-2.5 bg-canvas text-ink focus:outline-none focus:border-indigo-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-ink transition-colors cursor-pointer p-1"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="pt-2 flex justify-end gap-3">
