@@ -27,23 +27,18 @@ const generateRefreshToken = (userId) =>
  */
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, managerKey } = req.body
-    const validKey = process.env.MANAGER_SECRET_KEY || 'TASKLY-MGR-2026'
-
-    // Public Registration Protection: Direct self-registration is locked by default.
-    // Self-registration is disabled unless valid workspace key is provided.
-    if (!managerKey || managerKey.trim() !== validKey) {
-      return sendError(
-        res,
-        403,
-        'Public self-registration is disabled. Please contact Super Admin to provision your company account.'
-      )
-    }
-
     const rawRole = req.body.role
-    const assignedRole = (typeof rawRole === 'string' && ['manager', 'member'].includes(rawRole.trim().toLowerCase()))
-      ? rawRole.trim().toLowerCase()
-      : 'member'
+    let assignedRole = 'member'
+
+    // Manager role requires valid secret key; Member role registers freely
+    if (typeof rawRole === 'string' && rawRole.trim().toLowerCase() === 'manager') {
+      const validKey = process.env.MANAGER_SECRET_KEY || 'TASKLY-MGR-2026'
+      if (managerKey && managerKey.trim() === validKey) {
+        assignedRole = 'manager'
+      } else {
+        return sendError(res, 403, 'Invalid Workspace Manager Secret Key! Unable to register as Manager.')
+      }
+    }
 
     const existingUser = await User.findOne({ email: email.toLowerCase().trim() })
     if (existingUser) {

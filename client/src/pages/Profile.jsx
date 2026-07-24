@@ -65,16 +65,46 @@ function Profile() {
   const handleAvatarChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Avatar image size must be under 2MB')
-      return
-    }
 
     const reader = new FileReader()
-    reader.onloadend = () => {
-      setFormData((prev) => ({ ...prev, avatar: reader.result }))
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const MAX_WIDTH = 300
+        const MAX_HEIGHT = 300
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width
+            width = MAX_WIDTH
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height
+            height = MAX_HEIGHT
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7)
+        setFormData((prev) => ({ ...prev, avatar: compressedDataUrl }))
+        toast.success('Photo uploaded & optimized!')
+      }
+      img.src = event.target.result
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleRemoveAvatar = () => {
+    setFormData((prev) => ({ ...prev, avatar: '' }))
+    toast.success('Photo removed. Save profile to apply changes.')
   }
 
   const handleSaveProfile = async (e) => {
@@ -143,11 +173,21 @@ function Profile() {
               {isEditing && (
                 <label className="absolute inset-0 bg-black/60 rounded-3xl flex flex-col items-center justify-center text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-all cursor-pointer backdrop-blur-xs">
                   <Camera size={20} className="mb-1 text-cyan-300" />
-                  <span>Change</span>
+                  <span>Upload Photo</span>
                   <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
                 </label>
               )}
             </div>
+
+            {isEditing && (formData.avatar || user.avatar) && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                className="text-[11px] font-bold text-rose-400 hover:text-rose-300 hover:underline mb-2 cursor-pointer"
+              >
+                🗑️ Remove Photo
+              </button>
+            )}
 
             <h2 className="font-display font-extrabold text-xl text-ink">{user.name || 'User'}</h2>
             <p className="text-xs text-slate-400 font-medium mt-0.5">{user.email}</p>

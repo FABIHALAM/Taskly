@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { getProjectStats, getDashboardStats } = require('../controllers/analyticsController')
+const { getProjectStats, getDashboardStats, getOverviewStats } = require('../controllers/analyticsController')
 const protect = require('../middleware/authMiddleware')
 
 /**

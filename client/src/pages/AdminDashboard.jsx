@@ -357,7 +357,7 @@ function AdminDashboard() {
                               )}
                             </td>
 
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                               {isSelf ? (
                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold text-[11px] border border-indigo-500/30">
                                   <Crown size={12} /> Super Admin
@@ -375,7 +375,7 @@ function AdminDashboard() {
                               )}
                             </td>
 
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                               <span
                                 className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border ${
                                   u.status === 'Suspended'
@@ -388,7 +388,13 @@ function AdminDashboard() {
                               </span>
                             </td>
 
-                            <td className="px-6 py-4 text-right">
+                            <td className="px-6 py-4 text-right flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => setSelectedUserForDetails(u)}
+                                className="px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 transition-all cursor-pointer"
+                              >
+                                👁️ Inspect Bio
+                              </button>
                               {!isSelf && (
                                 <button
                                   onClick={() => handleStatusToggle(u._id, u.status)}

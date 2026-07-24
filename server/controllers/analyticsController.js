@@ -157,4 +157,45 @@ const getDashboardStats = async (req, res) => {
   }
 }
 
-module.exports = { getProjectStats, getDashboardStats }
+/**
+ * GET /api/analytics/overview
+ * Organization-wide analytics for Super Admin.
+ * Calculates live MongoDB metrics across all tasks, projects, and users.
+ */
+const getOverviewStats = async (req, res) => {
+  try {
+    const totalProjects = await Project.countDocuments({ isArchived: false })
+    const totalTasks = await Task.countDocuments({ isArchived: false })
+    const completedTasks = await Task.countDocuments({ status: 'Done', isArchived: false })
+    const inProgressTasks = await Task.countDocuments({ status: 'In Progress', isArchived: false })
+    const toDoTasks = await Task.countDocuments({ status: 'To Do', isArchived: false })
+
+    const now = new Date()
+    const overdueTasks = await Task.countDocuments({
+      dueDate: { $lt: now },
+      status: { $ne: 'Done' },
+      isArchived: false,
+    })
+
+    const totalUsers = await User.countDocuments()
+    const totalManagers = await User.countDocuments({ role: 'manager' })
+    const totalMembers = await User.countDocuments({ role: 'member' })
+
+    return sendSuccess(res, 200, 'Overview analytics fetched', {
+      totalProjects,
+      totalTasks,
+      completedTasks,
+      inProgressTasks,
+      toDoTasks,
+      overdueTasks,
+      totalUsers,
+      totalManagers,
+      totalMembers,
+      completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100,
+    })
+  } catch (error) {
+    return sendError(res, 500, 'Server error', error.message)
+  }
+}
+
+module.exports = { getProjectStats, getDashboardStats, getOverviewStats }
