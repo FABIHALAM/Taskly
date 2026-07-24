@@ -98,7 +98,7 @@ const loginUser = async (req, res) => {
 
     // Detect client IP and Geolocation
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1'
-    const loginLocation = 'Lahore, Pakistan' // Simulated enterprise location detection
+    const loginLocation = req.body.clientLocation || 'Islamabad, Pakistan'
 
     // Persist refresh token, last login timestamp, IP & Location
     user.refreshToken = refreshToken

@@ -55,7 +55,7 @@ function AdminDashboard() {
     try {
       const [userRes, projRes, analyticsRes] = await Promise.all([
         api.get('/admin/users'),
-        api.get('/projects'),
+        api.get('/projects/admin/all').catch(() => api.get('/projects')),
         api.get('/analytics/overview').catch(() => ({ data: { data: null } })),
       ])
       setUsers(userRes.data.data || [])
@@ -170,6 +170,14 @@ function AdminDashboard() {
                 }`}
               >
                 <Users size={14} /> Live User Control
+              </button>
+              <button
+                onClick={() => setActiveTab('projects')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all cursor-pointer ${
+                  activeTab === 'projects' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-ink'
+                }`}
+              >
+                <Briefcase size={14} /> Projects & Task Matrix
               </button>
               <button
                 onClick={() => setActiveTab('analytics')}
@@ -419,7 +427,143 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* ─── TAB 2: ORGANIZATIONAL ANALYTICS DASHBOARD ──────────────────── */}
+        {/* ─── TAB 2: PROJECTS & MANAGER-MEMBER TASK ASSIGNMENT MATRIX ─── */}
+        {activeTab === 'projects' && (
+          <div className="space-y-6">
+            <div className="bg-surface border border-line rounded-3xl p-6 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-line pb-4">
+                <div>
+                  <h3 className="font-display font-bold text-lg text-ink flex items-center gap-2">
+                    <Briefcase className="text-indigo-400" size={20} /> Organization Projects & Task Assignment Directory
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Complete breakdown of which Manager created each project and which Member is assigned to what task.
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
+                  {projects.length} Active Projects
+                </span>
+              </div>
+
+              {projects.length === 0 ? (
+                <p className="text-center py-12 text-xs text-slate-400 italic">No active projects found in workspace.</p>
+              ) : (
+                <div className="space-y-6">
+                  {projects.map((p) => (
+                    <div key={p._id} className="p-5 rounded-2xl bg-canvas border border-line space-y-4 shadow-xs">
+                      {/* Project Header Info */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-line pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-display font-extrabold text-base text-ink">{p.name}</h4>
+                            <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              {p.tasks ? p.tasks.length : 0} Tasks
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1">{p.description || 'No project description provided.'}</p>
+                        </div>
+
+                        {/* Owner / Manager Badge */}
+                        <div className="flex items-center gap-2 bg-surface p-2 rounded-xl border border-line shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-indigo-500/10 text-indigo-400 font-bold flex items-center justify-center text-xs uppercase">
+                            {p.owner?.name ? p.owner.name[0] : 'M'}
+                          </div>
+                          <div className="text-left text-xs">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Project Owner / Manager</span>
+                            <span className="font-bold text-ink">{p.owner?.name || 'Unassigned'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Manager ↔ Member Tasks Matrix Table */}
+                      <div className="space-y-2">
+                        <h5 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <Crown size={13} className="text-amber-400" /> Manager ↔ Assignee Tasks Matrix
+                        </h5>
+
+                        {!p.tasks || p.tasks.length === 0 ? (
+                          <p className="text-xs text-slate-400 italic py-3 bg-surface rounded-xl text-center border border-line">
+                            No tasks created in this project yet.
+                          </p>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left text-xs bg-surface rounded-2xl border border-line">
+                              <thead className="bg-canvas/60 border-b border-line text-slate-400 uppercase text-[10px] font-bold">
+                                <tr>
+                                  <th className="px-4 py-3">Task Title</th>
+                                  <th className="px-4 py-3">Assigned Member</th>
+                                  <th className="px-4 py-3">Assigning Manager</th>
+                                  <th className="px-4 py-3">Priority & Status</th>
+                                  <th className="px-4 py-3 text-right">Deadline</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-line">
+                                {p.tasks.map((t) => (
+                                  <tr key={t.id} className="hover:bg-canvas/30 transition-colors">
+                                    <td className="px-4 py-3 font-bold text-ink font-display">{t.title}</td>
+
+                                    <td className="px-4 py-3">
+                                      {t.assignee ? (
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-400 font-bold flex items-center justify-center text-[10px] uppercase">
+                                            {t.assignee.name[0]}
+                                          </div>
+                                          <div>
+                                            <p className="font-bold text-ink">{t.assignee.name}</p>
+                                            <p className="text-[10px] text-slate-400">{t.assignee.email}</p>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <span className="text-slate-400 italic text-[11px]">Unassigned</span>
+                                      )}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                      <span className="font-semibold text-slate-300">👔 {t.manager?.name || p.owner?.name || 'Manager'}</span>
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                      <div className="flex items-center gap-2">
+                                        <span
+                                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${
+                                            t.priority === 'High'
+                                              ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                              : t.priority === 'Medium'
+                                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                          }`}
+                                        >
+                                          {t.priority}
+                                        </span>
+                                        <span className="text-[11px] font-bold text-slate-300">{t.status}</span>
+                                      </div>
+                                    </td>
+
+                                    <td className="px-4 py-3 text-right">
+                                      {t.dueDate ? (
+                                        <span className="font-mono text-[11px] text-slate-300">
+                                          {new Date(t.dueDate).toLocaleDateString()}
+                                        </span>
+                                      ) : (
+                                        <span className="text-slate-400 italic text-[10px]">No date</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── TAB 3: ORGANIZATIONAL ANALYTICS DASHBOARD ──────────────────── */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             {/* Visual Progress Stats */}
@@ -701,7 +845,7 @@ function AdminDashboard() {
                   </div>
                 </div>
 
-                {selectedUserForDetails.currentTask && (
+                {selectedUserForDetails?.currentTask && (
                   <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs space-y-1">
                     <span className="text-[10px] text-indigo-300 font-bold uppercase block tracking-wider">
                       Current Assigned Active Task

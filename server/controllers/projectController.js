@@ -237,15 +237,57 @@ const deleteProject = async (req, res) => {
   }
 }
 
+const Task = require('../models/Task')
+
 /**
  * @route   GET /api/projects/admin/all
  * @access  Admin only
+ * Returns all active projects populated with Owner (Manager), Members, and Tasks matrix.
  */
 const getAllProjectsAdmin = async (req, res) => {
   try {
     const projects = await Project.find({ isArchived: false })
-      .populate('owner', 'name email role')
-    return sendSuccess(res, 200, 'All projects fetched', projects)
+      .populate('owner', 'name email role avatar department')
+      .populate('members.user', 'name email role avatar department')
+      .lean()
+
+    const projectsWithTasks = await Promise.all(
+      projects.map(async (p) => {
+        const tasks = await Task.find({ project: p._id, isArchived: false })
+          .populate('assignee', 'name email role avatar')
+          .sort({ createdAt: -1 })
+          .lean()
+
+        return {
+          ...p,
+          tasks: tasks.map((t) => ({
+            id: t._id,
+            title: t.title,
+            status: t.status,
+            priority: t.priority,
+            dueDate: t.dueDate,
+            assignee: t.assignee
+              ? {
+                  id: t.assignee._id,
+                  name: t.assignee.name,
+                  email: t.assignee.email,
+                  role: t.assignee.role,
+                  avatar: t.assignee.avatar,
+                }
+              : null,
+            manager: p.owner
+              ? {
+                  id: p.owner._id,
+                  name: p.owner.name,
+                  email: p.owner.email,
+                }
+              : null,
+          })),
+        }
+      })
+    )
+
+    return sendSuccess(res, 200, 'All organization projects & task matrix fetched', projectsWithTasks)
   } catch (error) {
     return sendError(res, 500, 'Server error', error.message)
   }

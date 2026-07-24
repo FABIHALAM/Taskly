@@ -59,7 +59,20 @@ export function AuthPage({ defaultMode = 'login' }) {
         toast.success('Account created! Please sign in.')
         navigate('/login')
       } else {
-        const result = await loginUser(data)
+        // Dynamic client IP Geolocation lookup
+        let geoData = { city: 'Islamabad', country_name: 'Pakistan' }
+        try {
+          const geoRes = await fetch('https://ipapi.co/json/').then((r) => r.json())
+          if (geoRes && geoRes.city) {
+            geoData = geoRes
+          }
+        } catch (geoErr) {
+          console.warn('Geolocation API lookup fallback', geoErr)
+        }
+
+        const locationStr = `${geoData.city || 'Islamabad'}, ${geoData.country_name || 'Pakistan'}`
+
+        const result = await loginUser({ ...data, clientLocation: locationStr })
         const { accessToken, refreshToken, user } = result.data
 
         localStorage.setItem('token', accessToken)
