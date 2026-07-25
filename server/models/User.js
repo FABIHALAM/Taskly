@@ -63,6 +63,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '127.0.0.1',
     },
+    latitude: {
+      type: Number,
+      default: null,
+    },
+    longitude: {
+      type: Number,
+      default: null,
+    },
     refreshToken: {
       type: String,
       default: null,

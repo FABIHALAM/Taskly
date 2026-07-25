@@ -96,15 +96,17 @@ const loginUser = async (req, res) => {
 
     const Notification = require('../models/Notification')
 
-    // Detect client IP and Geolocation
+    // Detect client IP, Geolocation, and GPS coordinates
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1'
     const loginLocation = req.body.clientLocation || 'Islamabad, Pakistan'
 
-    // Persist refresh token, last login timestamp, IP & Location
+    // Persist refresh token, last login timestamp, IP, Location, & Lat/Long
     user.refreshToken = refreshToken
     user.lastLogin = new Date()
     user.lastLoginIp = clientIp
     user.lastLoginLocation = loginLocation
+    if (req.body.latitude) user.latitude = req.body.latitude
+    if (req.body.longitude) user.longitude = req.body.longitude
     await user.save()
 
     // Real-time Notification dispatch to Super Admin

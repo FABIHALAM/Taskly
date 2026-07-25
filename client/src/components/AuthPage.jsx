@@ -60,20 +60,62 @@ export function AuthPage({ defaultMode = 'login' }) {
         toast.success('Account created! Please sign in.')
         navigate('/login')
       } else {
-        // Dynamic client IP Geolocation lookup
-        let geoData = { city: 'Islamabad', country_name: 'Pakistan' }
+        // Pinpoint GPS Geolocation + IP Lookup
+        let locationStr = 'Islamabad, Pakistan'
+        let latitude = null
+        let longitude = null
+
         try {
-          const geoRes = await fetch('https://ipapi.co/json/').then((r) => r.json())
-          if (geoRes && geoRes.city) {
-            geoData = geoRes
+          // Attempt high-accuracy HTML5 GPS Geolocation
+          if ('geolocation' in navigator) {
+            const gpsPosition = await new Promise((resolve) => {
+              navigator.geolocation.getCurrentPosition(
+                (pos) => resolve(pos),
+                () => resolve(null),
+                { timeout: 5000, enableHighAccuracy: true }
+              )
+            })
+
+            if (gpsPosition && gpsPosition.coords) {
+              latitude = gpsPosition.coords.latitude
+              longitude = gpsPosition.coords.longitude
+
+              // Reverse Geocode Lat/Long to exact city/district using free reverse geocoding API
+              try {
+                const revRes = await fetch(
+                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                ).then((r) => r.json())
+
+                if (revRes && (revRes.city || revRes.locality)) {
+                  const district = revRes.locality || revRes.city || ''
+                  const country = revRes.countryName || 'Pakistan'
+                  locationStr = `${district}, ${country}`
+                }
+              } catch (revErr) {
+                locationStr = `GPS (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`
+              }
+            }
+          }
+
+          // Fallback to Multi-Provider IP Geolocation if GPS was not granted
+          if (!latitude) {
+            const geoRes = await fetch('https://ipapi.co/json/').then((r) => r.json()).catch(() => null)
+            if (geoRes && geoRes.city) {
+              locationStr = `${geoRes.city}, ${geoRes.country_name}`
+              latitude = geoRes.latitude || null
+              longitude = geoRes.longitude || null
+            }
           }
         } catch (geoErr) {
-          console.warn('Geolocation API lookup fallback', geoErr)
+          console.warn('Geolocation capture fallback:', geoErr)
         }
 
-        const locationStr = `${geoData.city || 'Islamabad'}, ${geoData.country_name || 'Pakistan'}`
-
-        const result = await loginUser({ ...data, clientLocation: locationStr })
+        const result = await loginUser({
+          ...data,
+          clientLocation: locationStr,
+          latitude,
+          longitude,
+        })
         const { accessToken, refreshToken, user } = result.data
 
         localStorage.setItem('token', accessToken)

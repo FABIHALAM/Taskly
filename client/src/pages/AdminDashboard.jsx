@@ -340,6 +340,11 @@ function AdminDashboard() {
                                 </span>
                                 <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono">
                                   <span className="text-emerald-400 font-bold">📍 {u.lastLoginLocation || 'Lahore, PK'}</span>
+                                  {u.latitude && u.longitude && (
+                                    <span className="text-[9px] text-slate-400 bg-canvas px-1.5 py-0.5 rounded border border-line">
+                                      ({u.latitude.toFixed(2)}°, {u.longitude.toFixed(2)}°)
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </td>
@@ -845,6 +850,23 @@ function AdminDashboard() {
                     <span className={`font-bold mt-0.5 block ${selectedUserForDetails.status === 'Suspended' ? 'text-rose-400' : 'text-emerald-400'}`}>
                       {selectedUserForDetails.status || 'Active'}
                     </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-canvas border border-line col-span-2">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Last Verified Geolocation & IP</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="font-bold text-emerald-400">📍 {selectedUserForDetails.lastLoginLocation || 'Lahore, PK'} ({selectedUserForDetails.lastLoginIp || '127.0.0.1'})</span>
+                      {selectedUserForDetails.latitude && selectedUserForDetails.longitude && (
+                        <a
+                          href={`https://www.google.com/maps?q=${selectedUserForDetails.latitude},${selectedUserForDetails.longitude}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[10px] font-bold text-cyan-400 hover:underline bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20"
+                        >
+                          🗺️ View Google Maps GPS
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
 
