@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, User, Settings, LogOut, Bell, Search, Sun, Moon, Sparkles, Crown, UserCheck } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, User, Settings, LogOut, Bell, Search, Sun, Moon, Sparkles, Crown, UserCheck, Layers, Zap } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { getNotifications, markAllRead } from '../services/notificationService'
 import api from '../services/api'
@@ -110,6 +110,8 @@ function DashboardLayout({ children }) {
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     ...(user.role === 'admin' ? [{ label: 'Super Admin', path: '/admin/dashboard', icon: Crown }] : []),
     { label: 'Projects', path: '/projects', icon: FolderKanban },
+    { label: 'Sprint Backlog', path: '/sprints', icon: Layers },
+    { label: 'Automations', path: '/automations', icon: Zap },
     { label: 'Profile', path: '/profile', icon: User },
     { label: 'Settings', path: '/settings', icon: Settings },
   ]

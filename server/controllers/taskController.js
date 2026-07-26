@@ -148,6 +148,14 @@ const updateTask = async (req, res) => {
 
     await logActivity('task_updated', req.userId, 'Task', taskId)
 
+    // Trigger Automation Engine
+    const { executeAutomationRules } = require('./automationController')
+    if (status === 'Done') {
+      executeAutomationRules(taskId, 'STATUS_DONE')
+    } else if (priority === 'High') {
+      executeAutomationRules(taskId, 'PRIORITY_HIGH')
+    }
+
     if (assignee && assignee.toString() !== req.userId) {
       await createNotification(
         'task_assigned',
