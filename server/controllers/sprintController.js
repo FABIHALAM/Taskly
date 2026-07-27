@@ -11,14 +11,19 @@ const createSprint = async (req, res) => {
       return sendError(res, 400, 'Sprint name is required')
     }
 
-    // Fallback: If no projectId passed, pick first active project
-    if (!projectId) {
+    // Fallback: If no projectId or invalid projectId passed, attach to active project or auto-create one
+    if (!projectId || projectId === 'undefined' || projectId === 'null' || String(projectId).trim() === '') {
       const Project = require('../models/project')
-      const firstProj = await Project.findOne({ isArchived: false })
-      if (!firstProj) {
-        return sendError(res, 400, 'No active project found to attach sprint. Please create a project first.')
+      let proj = await Project.findOne({ isArchived: false })
+      if (!proj) {
+        proj = await Project.create({
+          name: 'Main Workspace',
+          description: 'Default Core Project',
+          owner: req.userId,
+          members: [{ user: req.userId, role: 'owner' }],
+        })
       }
-      projectId = firstProj._id
+      projectId = proj._id
     }
 
     const sprintData = {
@@ -27,14 +32,21 @@ const createSprint = async (req, res) => {
       project: projectId,
     }
 
-    if (startDate && startDate.trim()) sprintData.startDate = startDate
-    if (endDate && endDate.trim()) sprintData.endDate = endDate
+    if (startDate && typeof startDate === 'string' && startDate.trim()) {
+      const parsedStart = new Date(startDate)
+      if (!isNaN(parsedStart.getTime())) sprintData.startDate = parsedStart
+    }
+    if (endDate && typeof endDate === 'string' && endDate.trim()) {
+      const parsedEnd = new Date(endDate)
+      if (!isNaN(parsedEnd.getTime())) sprintData.endDate = parsedEnd
+    }
 
     const sprint = await Sprint.create(sprintData)
 
     return sendSuccess(res, 201, 'Sprint created successfully', sprint)
   } catch (error) {
-    return sendError(res, 500, 'Server error', error.message)
+    console.error('Sprint Creation Exception:', error)
+    return sendError(res, 500, 'Failed to create sprint', error.message)
   }
 }
 

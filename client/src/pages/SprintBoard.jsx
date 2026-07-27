@@ -74,7 +74,7 @@ function SprintBoard() {
       setIsModalOpen(false)
       fetchSprintsAndBacklog(selectedProjectId)
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create sprint')
+      toast.error(err.response?.data?.message || err.response?.data?.details || 'Failed to create sprint')
     }
   }
 
