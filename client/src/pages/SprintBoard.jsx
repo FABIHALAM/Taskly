@@ -39,10 +39,14 @@ function SprintBoard() {
         const res = await api.get('/projects')
         const projs = res.data.data || []
         setProjects(projs)
-        if (projs.length > 0) setSelectedProjectId(projs[0]._id || projs[0].id)
+        if (projs.length > 0) {
+          const firstId = projs[0]._id || projs[0].id || ''
+          setSelectedProjectId(firstId)
+        } else {
+          setIsLoading(false)
+        }
       } catch (err) {
-        toast.error('Failed to load projects')
-      } finally {
+        console.warn('Failed to load projects', err)
         setIsLoading(false)
       }
     }
@@ -50,13 +54,14 @@ function SprintBoard() {
   }, [])
 
   const fetchSprintsAndBacklog = async (pId) => {
-    if (!pId) return
+    if (!pId || pId === 'undefined' || pId === 'null') return
     try {
       const res = await api.get(`/sprints/project/${pId}`)
       setSprints(res.data.data?.sprints || [])
       setBacklogTasks(res.data.data?.backlogTasks || [])
     } catch (err) {
-      console.error('Failed to load sprints', err)
+      // Silent fail — dont spam toast on load error
+      console.error('Sprint fetch error:', err?.response?.data || err.message)
     }
   }
 
@@ -66,7 +71,10 @@ function SprintBoard() {
 
   const handleCreateSprint = async (e) => {
     e.preventDefault()
-    if (!formData.name.trim()) return
+    if (!formData.name.trim()) {
+      toast.error('Sprint name is required')
+      return
+    }
     try {
       await api.post('/sprints', { ...formData, projectId: selectedProjectId })
       toast.success('🏃 Sprint Created!')
@@ -74,7 +82,12 @@ function SprintBoard() {
       setIsModalOpen(false)
       fetchSprintsAndBacklog(selectedProjectId)
     } catch (err) {
-      toast.error(err.response?.data?.message || err.response?.data?.details || 'Failed to create sprint')
+      const msg = err?.response?.data?.message
+        || err?.response?.data?.details
+        || err?.message
+        || 'Failed to create sprint'
+      toast.error(`❌ ${msg}`)
+      console.error('Sprint create error:', err?.response?.data)
     }
   }
 

@@ -38,10 +38,14 @@ function Automations() {
         const res = await api.get('/projects')
         const projs = res.data.data || []
         setProjects(projs)
-        if (projs.length > 0) setSelectedProjectId(projs[0]._id)
+        if (projs.length > 0) {
+          const firstId = projs[0]._id || projs[0].id || ''
+          setSelectedProjectId(firstId)
+        } else {
+          setIsLoading(false)
+        }
       } catch (err) {
-        toast.error('Failed to load projects')
-      } finally {
+        console.warn('Failed to load projects', err)
         setIsLoading(false)
       }
     }
@@ -49,12 +53,13 @@ function Automations() {
   }, [])
 
   const fetchRules = async (pId) => {
-    if (!pId) return
+    if (!pId || pId === 'undefined' || pId === 'null') return
     try {
       const res = await api.get(`/automations/project/${pId}`)
       setRules(res.data.data || [])
     } catch (err) {
-      console.error('Failed to load rules', err)
+      // Silent fail on load
+      console.error('Automation rules fetch error:', err?.response?.data || err.message)
     }
   }
 
