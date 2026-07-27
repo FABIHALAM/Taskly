@@ -16,6 +16,7 @@ const commentRoutes = require('./routes/commentRoutes')
 const notificationRoutes = require('./routes/notificationRoutes')
 const searchRoutes = require('./routes/searchRoutes')
 const analyticsRoutes = require('./routes/analyticsRoutes')
+const adminRoutes = require('./routes/adminRoutes')
 const sprintRoutes = require('./routes/sprintRoutes')
 const automationRoutes = require('./routes/automationRoutes')
 
