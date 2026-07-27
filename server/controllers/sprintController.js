@@ -7,13 +7,16 @@ const createSprint = async (req, res) => {
   try {
     const { name, goal, projectId, startDate, endDate } = req.body
 
-    const sprint = await Sprint.create({
+    const sprintData = {
       name,
-      goal,
+      goal: goal || '',
       project: projectId,
-      startDate,
-      endDate,
-    })
+    }
+
+    if (startDate && startDate.trim()) sprintData.startDate = startDate
+    if (endDate && endDate.trim()) sprintData.endDate = endDate
+
+    const sprint = await Sprint.create(sprintData)
 
     return sendSuccess(res, 201, 'Sprint created successfully', sprint)
   } catch (error) {

@@ -74,7 +74,7 @@ function SprintBoard() {
       setIsModalOpen(false)
       fetchSprintsAndBacklog(selectedProjectId)
     } catch (err) {
-      toast.error('Failed to create sprint')
+      toast.error(err.response?.data?.message || 'Failed to create sprint')
     }
   }
 
@@ -318,7 +318,6 @@ function SprintBoard() {
                       </label>
                       <input
                         type="date"
-                        required
                         value={formData.startDate}
                         onChange={(e) => setFormData((p) => ({ ...p, startDate: e.target.value }))}
                         className="w-full text-xs font-medium border border-line rounded-xl px-3 py-2.5 bg-canvas text-ink focus:outline-none"
@@ -331,7 +330,6 @@ function SprintBoard() {
                       </label>
                       <input
                         type="date"
-                        required
                         value={formData.endDate}
                         onChange={(e) => setFormData((p) => ({ ...p, endDate: e.target.value }))}
                         className="w-full text-xs font-medium border border-line rounded-xl px-3 py-2.5 bg-canvas text-ink focus:outline-none"

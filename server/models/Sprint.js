@@ -18,11 +18,11 @@ const sprintSchema = new mongoose.Schema(
     },
     startDate: {
       type: Date,
-      required: true,
+      default: Date.now,
     },
     endDate: {
       type: Date,
-      required: true,
+      default: () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     },
     status: {
       type: String,
