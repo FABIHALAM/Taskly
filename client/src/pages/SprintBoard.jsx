@@ -39,7 +39,7 @@ function SprintBoard() {
         const res = await api.get('/projects')
         const projs = res.data.data || []
         setProjects(projs)
-        if (projs.length > 0) setSelectedProjectId(projs[0]._id)
+        if (projs.length > 0) setSelectedProjectId(projs[0]._id || projs[0].id)
       } catch (err) {
         toast.error('Failed to load projects')
       } finally {
@@ -125,7 +125,7 @@ function SprintBoard() {
               className="text-xs font-bold border border-line rounded-xl px-3.5 py-2.5 bg-surface text-ink focus:outline-none cursor-pointer"
             >
               {projects.map((p) => (
-                <option key={p._id} value={p._id}>
+                <option key={p._id || p.id} value={p._id || p.id}>
                   📁 {p.name}
                 </option>
               ))}

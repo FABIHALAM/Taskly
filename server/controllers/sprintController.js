@@ -5,10 +5,24 @@ const { sendSuccess, sendError } = require('../utils/response')
 // Create a new sprint
 const createSprint = async (req, res) => {
   try {
-    const { name, goal, projectId, startDate, endDate } = req.body
+    let { name, goal, projectId, startDate, endDate } = req.body
+
+    if (!name || !name.trim()) {
+      return sendError(res, 400, 'Sprint name is required')
+    }
+
+    // Fallback: If no projectId passed, pick first active project
+    if (!projectId) {
+      const Project = require('../models/project')
+      const firstProj = await Project.findOne({ isArchived: false })
+      if (!firstProj) {
+        return sendError(res, 400, 'No active project found to attach sprint. Please create a project first.')
+      }
+      projectId = firstProj._id
+    }
 
     const sprintData = {
-      name,
+      name: name.trim(),
       goal: goal || '',
       project: projectId,
     }
