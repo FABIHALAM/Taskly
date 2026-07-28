@@ -12,7 +12,9 @@ import CreateProjectModal from '../components/CreateProjectModal'
 function Dashboard() {
   const navigate = useNavigate()
   const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const isManager = user.role === 'manager' || user.role === 'admin'
+  const isAdmin = user.role === 'admin'
+  const isManager = user.role === 'manager' // admin excluded — admin supervises
+  const canCreateProject = isManager
 
   const [activities, setActivities] = useState([])
   const [analytics, setAnalytics] = useState(null)
@@ -213,7 +215,7 @@ function Dashboard() {
                   <h3 className="font-display font-bold text-lg text-ink">Active Projects</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Projects you are leading or assigned to</p>
                 </div>
-                {isManager && (
+                {canCreateProject && (
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
@@ -233,7 +235,7 @@ function Dashboard() {
                   <FolderKanban className="mx-auto text-slate-300 dark:text-slate-600 mb-3" size={36} />
                   <h4 className="text-sm font-bold text-ink">No Active Projects</h4>
                   <p className="text-xs text-slate-400 mt-1">
-                    {isManager ? 'Create your first project to start organizing tasks.' : 'Ask your manager to invite you to a project.'}
+                    {canCreateProject ? 'Create your first project to start organizing tasks.' : isAdmin ? 'No projects in workspace yet.' : 'Ask your manager to invite you to a project.'}
                   </p>
                 </div>
               ) : (

@@ -106,15 +106,31 @@ function DashboardLayout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const navItems = [
+  const isAdmin = user.role === 'admin'
+
+  // Admin navigation — full system access (all pages visible)
+  const adminNavItems = [
+    { label: 'Workspace Overview', path: '/dashboard', icon: LayoutDashboard },
+    { label: 'Super Admin Panel', path: '/admin/dashboard', icon: Crown },
+    { label: 'Projects', path: '/projects', icon: FolderKanban },
+    { label: 'Sprint Board', path: '/sprints', icon: Layers },
+    { label: 'Automations', path: '/automations', icon: Zap },
+    { label: 'Profile', path: '/profile', icon: User },
+    { label: 'Settings', path: '/settings', icon: Settings },
+  ]
+
+  // Member/Manager navigation
+  const memberNavItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    ...(user.role === 'admin' ? [{ label: 'Super Admin', path: '/admin/dashboard', icon: Crown }] : []),
     { label: 'Projects', path: '/projects', icon: FolderKanban },
     { label: 'Sprint Backlog', path: '/sprints', icon: Layers },
     { label: 'Automations', path: '/automations', icon: Zap },
     { label: 'Profile', path: '/profile', icon: User },
     { label: 'Settings', path: '/settings', icon: Settings },
   ]
+
+  const navItems = isAdmin ? adminNavItems : memberNavItems
+
 
   return (
     <div className={`flex min-h-screen bg-canvas text-ink ${dark ? 'dark' : ''}`}>

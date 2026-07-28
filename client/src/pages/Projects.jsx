@@ -17,7 +17,9 @@ function Projects() {
   const navigate = useNavigate()
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
-  const isManager = currentUser.role === 'manager' || currentUser.role === 'admin'
+  const isAdmin = currentUser.role === 'admin'
+  const isManager = currentUser.role === 'manager' // admin excluded — admin supervises, does not create
+  const canCreateProject = isManager // Only managers can create projects
 
   useEffect(() => { fetchProjects() }, [])
 
@@ -75,14 +77,18 @@ function Projects() {
             </p>
           </div>
 
-          {/* Only managers can create projects */}
-          {isManager ? (
+          {/* Only managers can create projects — admin supervises only */}
+          {canCreateProject ? (
             <button
               onClick={() => setIsModalOpen(true)}
               className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
             >
               <Plus size={16} /> New Project
             </button>
+          ) : isAdmin ? (
+            <span className="text-xs text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20 font-semibold flex items-center gap-1.5">
+              👑 Admin — Supervisory View
+            </span>
           ) : (
             <span className="text-xs text-slate-400 bg-surface px-3 py-1.5 rounded-xl border border-line font-medium">
               👷 Member View Only
@@ -96,15 +102,17 @@ function Projects() {
           <div className="bg-surface border border-dashed border-line rounded-3xl p-14 text-center">
             <FolderKanban className="mx-auto text-slate-300 dark:text-slate-600 mb-3" size={44} />
             <h3 className="font-display font-bold text-lg text-ink">
-              {isManager ? 'No Projects Created Yet' : 'No Projects Assigned to You'}
+              {isAdmin ? 'All Workspace Projects' : isManager ? 'No Projects Created Yet' : 'No Projects Assigned to You'}
             </h3>
             <p className="text-sm text-slate-400 mt-1 max-w-sm mx-auto">
-              {isManager
+              {isAdmin
+                ? 'No projects exist in the workspace yet. Ask a manager to create one.'
+                : isManager
                 ? 'Get started by creating your first project to organize team tasks and timelines.'
                 : 'Ask your project manager to add you to a project.'
               }
             </p>
-            {isManager && (
+            {canCreateProject && (
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="mt-5 inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
