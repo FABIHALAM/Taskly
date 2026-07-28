@@ -14,8 +14,9 @@ function DashboardLayout({ children }) {
   const { dark, setDark } = useTheme()
   const user = JSON.parse(localStorage.getItem('user') || '{}')
 
-  // Role pill text
-  const isManager = user.role === 'manager' || user.role === 'admin'
+  // Role checks
+  const isAdmin = user.role === 'admin'
+  const isManager = user.role === 'manager'
 
   // Command Palette State
   const [isCmdPaletteOpen, setIsCmdPaletteOpen] = useState(false)
@@ -106,8 +107,6 @@ function DashboardLayout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const isAdmin = user.role === 'admin'
-
   // Admin navigation — full system access (all pages visible)
   const adminNavItems = [
     { label: 'Workspace Overview', path: '/dashboard', icon: LayoutDashboard },
@@ -196,7 +195,11 @@ function DashboardLayout({ children }) {
               <p className="text-xs font-bold truncate text-white font-display">{user.name || 'User'}</p>
               <p className="text-[11px] text-slate-400 truncate mt-0.5">{user.email || ''}</p>
             </div>
-            {isManager ? (
+            {isAdmin ? (
+              <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <Crown size={9} /> Super Admin
+              </span>
+            ) : isManager ? (
               <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                 <Crown size={9} /> Manager
               </span>
