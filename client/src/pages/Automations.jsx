@@ -58,8 +58,9 @@ function Automations() {
       const res = await api.get(`/automations/project/${pId}`)
       setRules(res.data.data || [])
     } catch (err) {
-      // Silent fail on load
       console.error('Automation rules fetch error:', err?.response?.data || err.message)
+    } finally {
+      setIsLoading(false)
     }
   }
 

@@ -69,8 +69,9 @@ function SprintBoard() {
       setSprints(res.data.data?.sprints || [])
       setBacklogTasks(res.data.data?.backlogTasks || [])
     } catch (err) {
-      // Silent fail — dont spam toast on load error
       console.error('Sprint fetch error:', err?.response?.data || err.message)
+    } finally {
+      setIsLoading(false)
     }
   }
 
