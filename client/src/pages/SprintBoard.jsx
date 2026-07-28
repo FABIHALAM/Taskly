@@ -33,11 +33,20 @@ function SprintBoard() {
     endDate: '',
   })
 
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await api.get('/projects')
-        const projs = res.data.data || []
+        // Admin: fetch ALL workspace projects; members: fetch own projects
+        let projs = []
+        if (currentUser?.role === 'admin') {
+          const res = await api.get('/projects/admin/all').catch(() => api.get('/projects'))
+          projs = res.data.data || []
+        } else {
+          const res = await api.get('/projects')
+          projs = res.data.data || []
+        }
         setProjects(projs)
         if (projs.length > 0) {
           const firstId = projs[0]._id || projs[0].id || ''

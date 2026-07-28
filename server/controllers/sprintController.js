@@ -7,23 +7,36 @@ const createSprint = async (req, res) => {
   try {
     let { name, goal, projectId, startDate, endDate } = req.body
 
+    console.log('=== CREATE SPRINT DEBUG ===')
+    console.log('Body received:', { name, goal, projectId, startDate, endDate })
+    console.log('User:', req.userId)
+
     if (!name || !name.trim()) {
       return sendError(res, 400, 'Sprint name is required')
     }
 
-    // Fallback: If no projectId or invalid projectId passed, attach to active project or auto-create one
+    // Validate projectId — if missing, auto-pick based on role
+    const mongoose = require('mongoose')
     if (!projectId || projectId === 'undefined' || projectId === 'null' || String(projectId).trim() === '') {
       const Project = require('../models/project')
-      let proj = await Project.findOne({ isArchived: false })
+      const User = require('../models/User')
+      const reqUser = await User.findById(req.userId).select('role').lean()
+      const isAdmin = reqUser?.role === 'admin'
+
+      // Admin picks any project in workspace; members pick their own
+      const query = isAdmin
+        ? {}
+        : { $or: [{ owner: req.userId }, { 'members.user': req.userId }] }
+
+      const proj = await Project.findOne(query).lean()
       if (!proj) {
-        proj = await Project.create({
-          name: 'Main Workspace',
-          description: 'Default Core Project',
-          owner: req.userId,
-          members: [{ user: req.userId, role: 'owner' }],
-        })
+        return sendError(res, 400, 'No project found in workspace. Please create a project first.')
       }
       projectId = proj._id
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      return sendError(res, 400, `Invalid project ID: ${projectId}`)
     }
 
     const sprintData = {
@@ -32,21 +45,26 @@ const createSprint = async (req, res) => {
       project: projectId,
     }
 
-    if (startDate && typeof startDate === 'string' && startDate.trim()) {
+    if (startDate && String(startDate).trim()) {
       const parsedStart = new Date(startDate)
       if (!isNaN(parsedStart.getTime())) sprintData.startDate = parsedStart
     }
-    if (endDate && typeof endDate === 'string' && endDate.trim()) {
+    if (endDate && String(endDate).trim()) {
       const parsedEnd = new Date(endDate)
       if (!isNaN(parsedEnd.getTime())) sprintData.endDate = parsedEnd
     }
 
+    console.log('Creating sprint with data:', sprintData)
     const sprint = await Sprint.create(sprintData)
+    console.log('Sprint created successfully:', sprint._id)
 
     return sendSuccess(res, 201, 'Sprint created successfully', sprint)
   } catch (error) {
-    console.error('Sprint Creation Exception:', error)
-    return sendError(res, 500, 'Failed to create sprint', error.message)
+    console.error('=== SPRINT CREATION ERROR ===')
+    console.error('Name:', error.name)
+    console.error('Message:', error.message)
+    console.error('Stack:', error.stack)
+    return sendError(res, 500, error.message || 'Failed to create sprint')
   }
 }
 
@@ -108,7 +126,8 @@ const updateSprintStatus = async (req, res) => {
 
     return sendSuccess(res, 200, `Sprint status updated to ${status}`, sprint)
   } catch (error) {
-    return sendError(res, 500, 'Server error', error.message)
+    console.error('updateSprintStatus Error:', error.message)
+    return sendError(res, 500, error.message || 'Failed to update sprint status')
   }
 }
 
@@ -128,7 +147,8 @@ const assignTaskToSprint = async (req, res) => {
 
     return sendSuccess(res, 200, 'Task sprint assignment updated', task)
   } catch (error) {
-    return sendError(res, 500, 'Server error', error.message)
+    console.error('assignTaskToSprint Error:', error.message)
+    return sendError(res, 500, error.message || 'Failed to assign task to sprint')
   }
 }
 
