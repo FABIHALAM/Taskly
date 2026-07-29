@@ -5,8 +5,8 @@ export const getComments = async (taskId) => {
   return res.data
 }
 
-export const addComment = async (taskId, text) => {
-  const res = await api.post(`/comments/${taskId}`, { text })
+export const addComment = async (taskId, payload) => {
+  const res = await api.post(`/comments/${taskId}`, payload)
   return res.data
 }
 

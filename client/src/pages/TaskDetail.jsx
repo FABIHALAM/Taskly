@@ -259,7 +259,26 @@ function TaskDetail() {
   }
 
   if (isLoading) return <AppLoader message="Loading task details..." />
-  if (!task) return null
+  
+  if (!task) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-md mx-auto my-12 text-center p-8 bg-surface border border-line rounded-3xl space-y-4">
+          <AlertTriangle className="mx-auto text-amber-500" size={48} />
+          <h2 className="font-display font-bold text-lg text-ink">Task Not Found</h2>
+          <p className="text-xs text-slate-400">
+            This task may have been deleted, archived, or you might not have access to it.
+          </p>
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer shadow-md"
+          >
+            <ArrowLeft size={14} /> Go Back
+          </button>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done'
   const subtasksList = task.subtasks || []
@@ -592,7 +611,7 @@ function TaskDetail() {
                         )}
                       </div>
                       <span className="text-[10px] text-slate-400 font-mono">
-                        {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {c.createdAt ? new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                       </span>
                     </div>
 
