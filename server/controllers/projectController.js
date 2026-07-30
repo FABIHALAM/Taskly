@@ -91,7 +91,11 @@ const getProjectById = async (req, res) => {
 
     if (!project || project.isArchived) return sendError(res, 404, 'Project not found')
 
-    if (!isMember(project, req.userId)) {
+    // Admin has full supervisory access and bypasses member check
+    const user = await User.findById(req.userId)
+    const isAdmin = user && user.role === 'admin'
+
+    if (!isAdmin && !isMember(project, req.userId)) {
       return sendError(res, 403, 'Access denied — you are not a member of this project')
     }
 
