@@ -12,7 +12,7 @@
   --color-primary: #6366f1;
   --color-primary-hover: #4f46e5;
   --color-primary-soft: #eef2ff;
-  --color-brass: #d97706;
+  --color-brass: #06b6d4; /* Accented Cyan */
   --color-mint: #10b981;
   --color-line: #e2e8f0;
 }
@@ -26,13 +26,13 @@ body {
   letter-spacing: -0.011em;
 }
 
-/* Dark mode theme variables - Ultra-Clean Slate/Indigo Tones */
+/* Dark mode theme variables - Cyber Indigo & Deep space theme */
 .dark {
   --color-ink: #f8fafc;
-  --color-canvas: #0d0e17;
-  --color-surface: #151726;
+  --color-canvas: #07080f;
+  --color-surface: #0f111a;
   --color-sidebar: #080912;
-  --color-line: #24273d;
+  --color-line: #1c1d2b;
   --color-primary-soft: #1e1b4b;
 }
 
