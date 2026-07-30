@@ -219,17 +219,17 @@ function Dashboard() {
               />
             </div>
 
-            {/* Active Projects Directory (Matte Black Obsidian card aesthetics) */}
-            <div className="bg-surface border border-line rounded-3xl p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
+            {/* Active Projects Directory (High Contrast Elevated Cards) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-display font-bold text-base text-ink">Active Projects</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Projects and sprint workspaces</p>
+                  <h3 className="font-display font-extrabold text-lg text-ink">Active Projects</h3>
+                  <p className="text-xs text-slate-400 mt-0.5 font-medium">Projects and sprint workspaces</p>
                 </div>
                 {canCreateProject && (
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
+                    className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md shadow-indigo-500/20 cursor-pointer animate-none"
                   >
                     <Plus size={14} /> New Project
                   </button>
@@ -242,7 +242,7 @@ function Dashboard() {
                   Loading projects...
                 </div>
               ) : filteredProjects.length === 0 ? (
-                <div className="text-center py-12 border border-dashed border-line rounded-2xl bg-canvas">
+                <div className="text-center py-12 border border-dashed border-line rounded-3xl bg-surface">
                   <FolderKanban className="mx-auto text-slate-300 dark:text-slate-600 mb-3" size={36} />
                   <h4 className="text-sm font-bold text-ink">No Active Projects</h4>
                   <p className="text-xs text-slate-400 mt-1">
@@ -250,27 +250,27 @@ function Dashboard() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {filteredProjects.slice(0, 4).map((p, idx) => {
                     const projectProgress = 35 + (idx * 25) % 65 // Dynamic presentation progress bar
                     return (
                       <div
                         key={p._id}
                         onClick={() => navigate(`/projects/${p._id}`)}
-                        className="bg-canvas border border-line dark:bg-black/40 rounded-2xl p-5 hover:shadow-lg transition-all cursor-pointer group glow-card relative overflow-hidden"
+                        className="bg-surface border border-line rounded-3xl p-5 hover:shadow-xl transition-all cursor-pointer group glow-card relative overflow-hidden shadow-sm"
                       >
                         <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-bold text-sm text-ink truncate group-hover:text-indigo-500 transition-colors">
+                          <h4 className="font-display font-extrabold text-sm text-ink truncate group-hover:text-indigo-500 transition-colors">
                             {p.name}
                           </h4>
                           <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 min-h-[2rem]">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 min-h-[2rem] leading-relaxed">
                           {p.description || 'No description provided.'}
                         </p>
 
                         {/* Stacking Member Avatars (Overlapping circle style) */}
-                        <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-line">
+                        <div className="flex items-center justify-between mt-4 pt-3.5 border-t border-line/65">
                           <div className="flex -space-x-2.5 overflow-hidden">
                             {avatarInitials.slice(0, 3 + idx % 3).map((initial, i) => (
                               <div
@@ -307,7 +307,7 @@ function Dashboard() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-5 space-y-3 shadow-sm"
+                className="bg-rose-500/5 border border-rose-500/20 rounded-3xl p-5 space-y-3 shadow-sm"
               >
                 <div className="flex items-center gap-2 text-rose-500 font-bold text-xs uppercase tracking-wider">
                   <AlertTriangle size={15} className="animate-pulse" />
@@ -318,13 +318,13 @@ function Dashboard() {
                     <div
                       key={task.id}
                       onClick={() => navigate(`/projects/${task.projectId || projects[0]?._id || ''}/tasks/${task.id}`)}
-                      className="bg-surface border border-rose-500/10 rounded-xl p-3.5 hover:shadow-md cursor-pointer flex items-center justify-between transition-all group"
+                      className="bg-surface border border-rose-500/15 rounded-2xl p-3.5 hover:shadow-md cursor-pointer flex items-center justify-between transition-all group shadow-sm"
                     >
                       <div className="pr-3">
                         <p className="text-xs font-bold text-ink group-hover:text-indigo-500 transition-colors line-clamp-1">{task.title}</p>
                         <p className="text-[10px] text-slate-400 mt-0.5">{task.project || 'Project'}</p>
                       </div>
-                      <span className="text-[10px] font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-full shrink-0">
+                      <span className="text-[10px] font-bold text-rose-500 bg-rose-500/10 px-2.5 py-0.5 rounded-full shrink-0">
                         Due {new Date(task.dueDate).toLocaleDateString()}
                       </span>
                     </div>
@@ -334,22 +334,22 @@ function Dashboard() {
             )}
 
             {/* Upcoming Schedule/Tasks Due Soon */}
-            <div className="bg-surface border border-line rounded-3xl p-6 shadow-sm">
-              <h3 className="font-display font-bold text-base text-ink flex items-center gap-2 mb-4">
+            <div className="space-y-4">
+              <h3 className="font-display font-extrabold text-lg text-ink flex items-center gap-2">
                 <TrendingUp size={16} className="text-indigo-500" />
                 Upcoming Deadlines
               </h3>
               {!analytics?.dueSoonTasks || analytics.dueSoonTasks.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-8 border border-dashed border-line rounded-2xl bg-canvas italic">
+                <p className="text-xs text-slate-400 text-center py-8 border border-dashed border-line rounded-3xl bg-surface italic shadow-sm">
                   No tasks due in the next 3 days. Clean sheet!
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {analytics.dueSoonTasks.map((task) => (
                     <div
                       key={task.id}
                       onClick={() => navigate(`/projects/${task.projectId || projects[0]?._id || ''}/tasks/${task.id}`)}
-                      className="flex items-center justify-between p-3.5 border border-line rounded-xl hover:shadow-sm cursor-pointer transition-all bg-canvas hover:border-indigo-500/30 group"
+                      className="flex items-center justify-between p-4 border border-line rounded-3xl hover:shadow-md cursor-pointer transition-all bg-surface hover:border-indigo-500/30 group shadow-sm"
                     >
                       <div>
                         <p className="text-xs font-bold text-ink group-hover:text-indigo-500 transition-colors">{task.title}</p>
@@ -377,11 +377,11 @@ function Dashboard() {
               </div>
               <div>
                 <h3 className="font-display font-extrabold text-sm text-ink">{user.name || 'User'}</h3>
-                <p className="text-[10px] text-slate-400">{user.email || ''}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">{user.email || ''}</p>
               </div>
 
               {/* Role badge */}
-              <div className="inline-flex items-center gap-1 text-[9px] font-extrabold px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <div className="inline-flex items-center gap-1 text-[9px] font-extrabold px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
                 <ShieldCheck size={11} /> {user.role === 'admin' ? 'SUPER ADMIN' : user.role === 'manager' ? 'MANAGER' : 'DEVELOPER'}
               </div>
             </div>
