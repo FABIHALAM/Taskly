@@ -152,7 +152,12 @@ function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* LEFT 2 COLUMNS: Main Dashboard Controls */}
-          <div className="lg:col-span-2 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, x: -15 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-2 space-y-6"
+          >
 
             {/* Greeting Header Hero (Dribbble High Contrast style with Cyber Gradient) */}
             <motion.div
@@ -365,10 +370,15 @@ function Dashboard() {
               )}
             </div>
 
-          </div>
+          </motion.div>
 
           {/* RIGHT 1 COLUMN: Utility Widgets & Calendar */}
-          <div className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6"
+          >
 
             {/* Widget 1: Profile Card */}
             <div className="bg-surface border border-line rounded-3xl p-5 shadow-sm flex flex-col items-center text-center space-y-3 relative overflow-hidden">
@@ -390,12 +400,24 @@ function Dashboard() {
             <div className="bg-surface border border-line rounded-3xl p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-indigo-500" />
+                  <Clock className={`w-4 h-4 transition-colors ${isTracking ? 'text-emerald-500 animate-pulse' : 'text-indigo-500'}`} />
                   <h4 className="font-display font-bold text-xs text-ink">Project Time Tracker</h4>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full">
-                  {formatStopwatch(trackedTime)}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {isTracking && (
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                  )}
+                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full transition-all ${
+                    isTracking
+                      ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]'
+                      : 'text-indigo-400 bg-indigo-500/10 border border-indigo-500/20'
+                  }`}>
+                    {formatStopwatch(trackedTime)}
+                  </span>
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -468,7 +490,7 @@ function Dashboard() {
               )}
             </div>
 
-          </div>
+          </motion.div>
 
         </div>
 
