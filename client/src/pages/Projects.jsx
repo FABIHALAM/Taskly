@@ -104,7 +104,7 @@ function Projects() {
             </button>
           ) : isAdmin ? (
             <div className="flex flex-col items-end gap-1">
-              <span className="text-xs text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20 font-semibold flex items-center gap-1.5">
+              <span className="text-xs text-cyan-500 bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/20 font-semibold flex items-center gap-1.5">
                 <Eye size={13} /> Supervisory View
               </span>
               <span className="text-[10px] text-slate-500">Read-only access</span>
@@ -121,7 +121,7 @@ function Projects() {
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-amber-400 text-xs font-semibold"
+            className="flex items-center gap-3 p-3.5 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 text-cyan-500 text-xs font-semibold"
           >
             <ShieldAlert size={16} className="shrink-0" />
             <span>
@@ -167,7 +167,7 @@ function Projects() {
                   transition={{ duration: 0.35, delay: index * 0.05 }}
                   onClick={() => navigate(`/projects/${project._id}`)}
                   className={`bg-surface border border-line rounded-3xl p-6 hover:shadow-xl transition-all cursor-pointer group glow-card relative overflow-hidden border-l-4 ${
-                    isAdmin ? 'border-l-amber-500' : 'border-l-indigo-500'
+                    isAdmin ? 'border-l-cyan-500' : 'border-l-indigo-500'
                   }`}
                 >
                   {/* Project Name + Role Badge */}
@@ -176,7 +176,7 @@ function Projects() {
                       {project.name}
                     </h3>
                     {isAdmin ? (
-                      <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                      <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
                         <Eye size={9} /> Monitoring
                       </span>
                     ) : userIsOwner ? (
@@ -196,9 +196,9 @@ function Projects() {
 
                   {/* Admin sees who owns the project */}
                   {isAdmin && (
-                    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-400/80">
+                    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-cyan-500/80">
                       <Crown size={11} />
-                      <span>Manager: <strong>{ownerName}</strong></span>
+                      <span>Manager: <strong className="text-cyan-500">{ownerName}</strong></span>
                     </div>
                   )}
 
