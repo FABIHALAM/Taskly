@@ -149,7 +149,7 @@ function AdminDashboard() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-line pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-line pb-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-2">
               <ShieldAlert size={13} />
@@ -163,7 +163,7 @@ function AdminDashboard() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {/* View Mode Tabs */}
             <div className="flex rounded-xl border border-line bg-surface p-1 shadow-sm text-xs font-bold">
               <button

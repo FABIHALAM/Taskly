@@ -1,19 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { loginUser, registerUser } from '../services/authService'
+import { useNavigate } from 'react-router-dom'
+import { loginUser } from '../services/authService'
 import api from '../services/api'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Mail, Lock, User, Crown, UserCheck, Check, Sparkles, LayoutGrid, AlignLeft, ShieldCheck, Zap, Eye, EyeOff } from 'lucide-react'
+import { ArrowRight, Mail, Lock, Sparkles, LayoutGrid, AlignLeft, ShieldCheck, Zap, Eye, EyeOff } from 'lucide-react'
 
-export function AuthPage({ defaultMode = 'login' }) {
+export function AuthPage() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const isRegister = location.pathname === '/register' || defaultMode === 'register'
-
-  const [selectedRole, setSelectedRole] = useState('member')
-  const [managerKey, setManagerKey] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0)
 
@@ -23,10 +18,6 @@ export function AuthPage({ defaultMode = 'login' }) {
     formState: { errors, isSubmitting },
     reset,
   } = useForm()
-
-  useEffect(() => {
-    reset()
-  }, [isRegister, reset])
 
   const features = [
     {
@@ -49,87 +40,81 @@ export function AuthPage({ defaultMode = 'login' }) {
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveFeatureIndex((prev) => (prev + 1) % features.length)
-    }, 4000)
+    }, 4500)
     return () => clearInterval(timer)
   }, [features.length])
 
   const onSubmit = async (data) => {
     try {
-      if (isRegister) {
-        await registerUser({ ...data, role: selectedRole, managerKey })
-        toast.success('Account created! Please sign in.')
-        navigate('/login')
-      } else {
-        // Pinpoint GPS Geolocation + IP Lookup
-        let locationStr = 'Islamabad, Pakistan'
-        let latitude = null
-        let longitude = null
+      // Pinpoint GPS Geolocation + IP Lookup
+      let locationStr = 'Islamabad, Pakistan'
+      let latitude = null
+      let longitude = null
 
-        try {
-          // Attempt high-accuracy HTML5 GPS Geolocation
-          if ('geolocation' in navigator) {
-            const gpsPosition = await new Promise((resolve) => {
-              navigator.geolocation.getCurrentPosition(
-                (pos) => resolve(pos),
-                () => resolve(null),
-                { timeout: 5000, enableHighAccuracy: true }
-              )
-            })
+      try {
+        // Attempt GPS Geolocation
+        if ('geolocation' in navigator) {
+          const gpsPosition = await new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => resolve(pos),
+              () => resolve(null),
+              { timeout: 5000, enableHighAccuracy: true }
+            )
+          })
 
-            if (gpsPosition && gpsPosition.coords) {
-              latitude = gpsPosition.coords.latitude
-              longitude = gpsPosition.coords.longitude
+          if (gpsPosition && gpsPosition.coords) {
+            latitude = gpsPosition.coords.latitude
+            longitude = gpsPosition.coords.longitude
 
-              // Reverse Geocode Lat/Long to exact city/district using free reverse geocoding API
-              try {
-                const revRes = await fetch(
-                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-                ).then((r) => r.json())
+            // Reverse Geocode
+            try {
+              const revRes = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+              ).then((r) => r.json())
 
-                if (revRes && (revRes.city || revRes.locality)) {
-                  const district = revRes.locality || revRes.city || ''
-                  const country = revRes.countryName || 'Pakistan'
-                  locationStr = `${district}, ${country}`
-                }
-              } catch (revErr) {
-                locationStr = `GPS (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`
+              if (revRes && (revRes.city || revRes.locality)) {
+                const district = revRes.locality || revRes.city || ''
+                const country = revRes.countryName || 'Pakistan'
+                locationStr = `${district}, ${country}`
               }
+            } catch (revErr) {
+              locationStr = `GPS (${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°)`
             }
           }
-
-          // Fallback to Multi-Provider IP Geolocation if GPS was not granted
-          if (!latitude) {
-            const geoRes = await fetch('https://ipapi.co/json/').then((r) => r.json()).catch(() => null)
-            if (geoRes && geoRes.city) {
-              locationStr = `${geoRes.city}, ${geoRes.country_name}`
-              latitude = geoRes.latitude || null
-              longitude = geoRes.longitude || null
-            }
-          }
-        } catch (geoErr) {
-          console.warn('Geolocation capture fallback:', geoErr)
         }
 
-        const result = await loginUser({
-          ...data,
-          clientLocation: locationStr,
-          latitude,
-          longitude,
-        })
-        const { accessToken, refreshToken, user } = result.data
-
-        localStorage.setItem('token', accessToken)
-        localStorage.setItem('refreshToken', refreshToken)
-
-        const profileRes = await api.get('/auth/me')
-        const freshUser = profileRes.data?.data || user
-        localStorage.setItem('user', JSON.stringify(freshUser))
-
-        toast.success(`Welcome back, ${freshUser.name || 'User'}!`)
-        navigate('/dashboard')
+        // Fallback to IP Geolocation if GPS not granted
+        if (!latitude) {
+          const geoRes = await fetch('https://ipapi.co/json/').then((r) => r.json()).catch(() => null)
+          if (geoRes && geoRes.city) {
+            locationStr = `${geoRes.city}, ${geoRes.country_name}`
+            latitude = geoRes.latitude || null
+            longitude = geoRes.longitude || null
+          }
+        }
+      } catch (geoErr) {
+        console.warn('Geolocation capture fallback:', geoErr)
       }
+
+      const result = await loginUser({
+        ...data,
+        clientLocation: locationStr,
+        latitude,
+        longitude,
+      })
+      const { accessToken, refreshToken, user } = result.data
+
+      localStorage.setItem('token', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+
+      const profileRes = await api.get('/auth/me')
+      const freshUser = profileRes.data?.data || user
+      localStorage.setItem('user', JSON.stringify(freshUser))
+
+      toast.success(`Welcome back, ${freshUser.name || 'User'}!`)
+      navigate('/dashboard')
     } catch (error) {
-      toast.error(error.response?.data?.message || (isRegister ? 'Registration failed' : 'Sign in failed'))
+      toast.error(error.response?.data?.message || 'Sign in failed. Check your credentials.')
     }
   }
 
@@ -137,63 +122,63 @@ export function AuthPage({ defaultMode = 'login' }) {
   const FeatureIcon = currentFeature.icon
 
   return (
-    <div className="min-h-screen w-full bg-[#120d2b] text-white flex items-center justify-center p-4 md:p-8 font-body selection:bg-cyan-400/20 selection:text-cyan-200 relative overflow-hidden">
+    <div className="min-h-screen w-full bg-[#07080f] text-slate-100 flex items-center justify-center p-4 md:p-8 font-body selection:bg-indigo-500/20 selection:text-indigo-200 relative overflow-hidden">
       {/* Universal Background Radial Dot Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(rgba(129,140,248,0.2)1px,transparent_1px)] [background-size:24px_24px] opacity-70 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(99,102,241,0.08)1px,transparent_1px)] [background-size:24px_24px] opacity-70 pointer-events-none" />
 
-      {/* Vibrant Ambient Backlight */}
-      <div className="absolute top-1/4 left-1/3 w-[650px] h-[650px] bg-purple-600/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none" />
+      {/* Vibrant Cyber Ambient Backlight */}
+      <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Main Split Container (Brightened & Vibrant - Inspired by Ref Image 1 & 2) */}
-      <div className="w-full max-w-5xl bg-[#1a1438]/95 backdrop-blur-2xl border border-white/20 rounded-[32px] shadow-[0_30px_90px_rgba(0,0,0,0.6)] overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
+      {/* Main Split Container (Obsidian High Contrast - Matches Dashboard Sidebar branding) */}
+      <div className="w-full max-w-5xl bg-[#0f111a]/95 backdrop-blur-2xl border border-white/5 rounded-[32px] shadow-[0_30px_90px_rgba(0,0,0,0.8)] overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
 
-        {/* ─── LEFT SHOWCASE PANEL (Vibrant Indigo/Purple) ─────────────────── */}
-        <div className="lg:col-span-6 p-8 lg:p-12 bg-gradient-to-br from-[#3b1c78] via-[#2c135c] to-[#1c0a42] relative flex flex-col justify-between overflow-hidden border-b lg:border-b-0 lg:border-r border-white/15">
+        {/* ─── LEFT SHOWCASE PANEL (Obsidian Charcoal with Indigo/Cyan gradients) ─────────────────── */}
+        <div className="lg:col-span-6 p-8 lg:p-12 bg-gradient-to-br from-[#0c0d15] via-[#0f111a] to-[#161825] relative flex flex-col justify-between overflow-hidden border-b lg:border-b-0 lg:border-r border-white/5">
 
-          {/* Abstract 3D Geometric Ribbon Art (Ref Image 1) */}
-          <div className="absolute -top-10 -left-10 w-72 h-72 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 opacity-40 blur-2xl pointer-events-none" />
+          {/* Abstract 3D Geometric Ribbon Art (Cyber style) */}
+          <div className="absolute -top-10 -left-10 w-72 h-72 rounded-full bg-gradient-to-tr from-indigo-500/20 to-cyan-500/20 opacity-30 blur-2xl pointer-events-none" />
 
           {/* Top Brand Mark */}
           <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-400 to-purple-500 p-[2px] shadow-lg shadow-cyan-500/25">
-                <div className="w-full h-full bg-[#1c0a42] rounded-[14px] flex items-center justify-center font-display font-black text-xl text-cyan-300">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-500 p-[1px] shadow-lg shadow-indigo-500/15">
+                <div className="w-full h-full bg-[#07080f] rounded-[14px] flex items-center justify-center font-display font-black text-xl text-white">
                   T
                 </div>
               </div>
               <div>
                 <span className="font-display font-bold text-xl tracking-tight text-white block leading-none">Taskly™</span>
-                <span className="text-[10px] text-cyan-300 font-mono tracking-wider">INNOVATION STARTS HERE</span>
+                <span className="text-[10px] text-cyan-400 font-mono tracking-wider">WORKSPACE ENTERPRISE</span>
               </div>
             </div>
 
-            <span className="text-[11px] font-bold px-3.5 py-1 rounded-full bg-white/10 border border-white/20 text-white flex items-center gap-1.5 backdrop-blur-md">
-              <Zap size={12} className="text-cyan-400" /> Enterprise
+            <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 flex items-center gap-1.5 backdrop-blur-md">
+              <Zap size={12} className="text-cyan-400" /> Version 2.0
             </span>
           </div>
 
           {/* Middle Headline & Interactive Preview */}
-          <div className="relative z-10 my-10 space-y-6">
+          <div className="relative z-10 my-12 space-y-6">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeFeatureIndex}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
+                exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-400/20 border border-cyan-400/30 text-cyan-200 text-xs font-bold shadow-sm">
-                  <FeatureIcon size={14} />
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold shadow-sm">
+                  <FeatureIcon size={14} className="text-cyan-400" />
                   <span>{currentFeature.title}</span>
                 </div>
 
                 <h2 className="font-display text-2xl lg:text-3xl font-extrabold text-white leading-tight">
-                  You will be managing core workflows with Taskly Ideas™
+                  High-performance team management software
                 </h2>
 
-                <p className="text-slate-200 text-xs lg:text-sm leading-relaxed font-medium">
+                <p className="text-slate-400 text-xs lg:text-sm leading-relaxed font-medium">
                   {currentFeature.desc}
                 </p>
               </motion.div>
@@ -207,8 +192,8 @@ export function AuthPage({ defaultMode = 'login' }) {
                   onClick={() => setActiveFeatureIndex(idx)}
                   className={`text-xs font-bold px-3.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
                     activeFeatureIndex === idx
-                      ? 'bg-cyan-400/25 border-cyan-400 text-cyan-100 shadow-md'
-                      : 'bg-white/10 border-white/15 text-slate-300 hover:text-white hover:bg-white/20'
+                      ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300 shadow-md shadow-indigo-500/5'
+                      : 'bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   {f.title}
@@ -218,227 +203,103 @@ export function AuthPage({ defaultMode = 'login' }) {
           </div>
 
           {/* Bottom Info Note */}
-          <div className="relative z-10 pt-4 border-t border-white/15 flex items-center justify-between text-xs text-slate-300 font-medium">
-            <span>Encrypted Authentication</span>
-            <span className="text-cyan-300 font-bold">v2.4 Production</span>
+          <div className="relative z-10 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-500 font-semibold font-mono">
+            <span>SECURE AES ENCRYPTION</span>
+            <span className="text-cyan-500">v2.0 PRODUCTION</span>
           </div>
         </div>
 
         {/* ─── RIGHT FORM PANEL (Brightened & High Contrast) ─────────────────── */}
-        <div className="lg:col-span-6 p-8 lg:p-12 bg-[#201844] flex flex-col justify-center relative">
-
-          {/* Segmented Control Tab Switcher */}
-          <div className="bg-[#291f54] p-1 rounded-2xl border border-white/15 flex items-center mb-6 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              className={`flex-1 py-2.5 rounded-xl transition-all cursor-pointer relative z-10 ${
-                !isRegister ? 'text-slate-950 font-black' : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Sign In
-              {!isRegister && (
-                <motion.div
-                  layoutId="auth-active-tab-bright"
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-300 rounded-xl -z-10 shadow-md"
-                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                />
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate('/register')}
-              className={`flex-1 py-2.5 rounded-xl transition-all cursor-pointer relative z-10 ${
-                isRegister ? 'text-slate-950 font-black' : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Create Account
-              {isRegister && (
-                <motion.div
-                  layoutId="auth-active-tab-bright"
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-300 rounded-xl -z-10 shadow-md"
-                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                />
-              )}
-            </button>
-          </div>
+        <div className="lg:col-span-6 p-8 lg:p-12 bg-[#0f111a] flex flex-col justify-center relative">
 
           {/* Header Title */}
-          <div className="mb-6">
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 mb-3 uppercase tracking-wider">
+              Secure Sign In
+            </div>
             <h1 className="font-display text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
-              {isRegister ? 'Create Your Account' : 'Log In to Taskly™'}
+              Log In to Taskly™
             </h1>
-            <p className="text-slate-300 text-xs lg:text-sm mt-1 font-medium">
-              {isRegister ? 'Select your role and enter credentials to join.' : 'Enter your email and password to access workspace.'}
+            <p className="text-slate-400 text-xs lg:text-sm mt-1.5 font-medium">
+              Access is restricted to registered users only. Use the credentials provided by your Administrator.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Role Selector (Register Mode) */}
-            <AnimatePresence>
-              {isRegister && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-2 overflow-hidden"
-                >
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300">
-                    Workspace Role
-                  </label>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('manager')}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
-                        selectedRole === 'manager'
-                          ? 'border-cyan-400 bg-cyan-400/20 text-white shadow-sm'
-                          : 'border-white/15 bg-[#291f54] text-slate-300 hover:border-white/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Crown size={15} className={selectedRole === 'manager' ? 'text-cyan-300' : 'text-slate-400'} />
-                        <div>
-                          <p className="text-xs font-bold font-display">Manager</p>
-                          <p className="text-[9px] text-slate-300">Create & Assign</p>
-                        </div>
-                      </div>
-                      {selectedRole === 'manager' && (
-                        <div className="w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
-                          <Check size={10} className="text-slate-950 font-bold" />
-                        </div>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('member')}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between ${
-                        selectedRole === 'member'
-                          ? 'border-emerald-400 bg-emerald-400/20 text-white shadow-sm'
-                          : 'border-white/15 bg-[#291f54] text-slate-300 hover:border-white/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <UserCheck size={15} className={selectedRole === 'member' ? 'text-emerald-300' : 'text-slate-400'} />
-                        <div>
-                          <p className="text-xs font-bold font-display">Member</p>
-                          <p className="text-[9px] text-slate-300">Execute Tasks</p>
-                        </div>
-                      </div>
-                      {selectedRole === 'member' && (
-                        <div className="w-4 h-4 rounded-full bg-emerald-400 flex items-center justify-center">
-                          <Check size={10} className="text-slate-950 font-bold" />
-                        </div>
-                      )}
-                    </button>
-                  </div>
-
-                  {selectedRole === 'manager' && (
-                    <div className="pt-2">
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-cyan-300 mb-1">
-                        Workspace Manager Secret Key
-                      </label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="Enter Manager Secret Key (e.g. TASKLY-MGR-2026)"
-                        value={managerKey}
-                        onChange={(e) => setManagerKey(e.target.value)}
-                        className="w-full text-xs font-mono font-bold border border-cyan-400/40 rounded-xl px-3.5 py-2 bg-[#18113b] text-cyan-200 placeholder-slate-400 focus:outline-none focus:border-cyan-400"
-                      />
-                      <p className="text-[10px] text-slate-400 mt-1 italic">
-                        🛡️ Manager role requires Super Admin authorization key.
-                      </p>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Name Input (Register Only) */}
-            {isRegister && (
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                  Your Name
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    {...regInput('name', { required: 'Name is required' })}
-                    className="w-full bg-[#291f54] border border-white/20 rounded-xl pl-10 pr-4 py-3 text-white placeholder-slate-400 text-xs font-medium focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-all"
-                    placeholder="Alex Morgan"
-                  />
-                </div>
-                {errors.name && <p className="text-rose-300 text-xs mt-1 font-medium">{errors.name.message}</p>}
-              </div>
-            )}
-
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email Input */}
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+              <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">
                 Your Email
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   {...regInput('email', {
                     required: 'Email is required',
                     pattern: { value: /^\S+@\S+$/i, message: 'Invalid email address' }
                   })}
-                  className="w-full bg-[#291f54] border border-white/20 rounded-xl pl-10 pr-4 py-3 text-white placeholder-slate-400 text-xs font-medium focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-all"
+                  className="w-full bg-[#161824] border border-white/5 rounded-xl pl-10 pr-4 py-3.5 text-white placeholder-slate-600 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all"
                   placeholder="alex@company.com"
                 />
               </div>
-              {errors.email && <p className="text-rose-300 text-xs mt-1 font-medium">{errors.email.message}</p>}
+              {errors.email && <p className="text-rose-400 text-xs mt-1 font-medium">{errors.email.message}</p>}
             </div>
 
             {/* Password Input */}
             <div>
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+              <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">
                 Your Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   {...regInput('password', {
                     required: 'Password is required',
                     minLength: { value: 6, message: 'Minimum 6 characters' }
                   })}
-                  className="w-full bg-[#291f54] border border-white/20 rounded-xl pl-10 pr-10 py-3 text-white placeholder-slate-400 text-xs font-medium focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30 transition-all"
+                  className="w-full bg-[#161824] border border-white/5 rounded-xl pl-10 pr-10 py-3.5 text-white placeholder-slate-600 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all"
                   placeholder="••••••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer p-1"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer p-1"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              {errors.password && <p className="text-rose-300 text-xs mt-1 font-medium">{errors.password.message}</p>}
+              {errors.password && <p className="text-rose-400 text-xs mt-1 font-medium">{errors.password.message}</p>}
             </div>
 
-            {/* Electric Cyan/Teal CTA Submit Button (Ref Image 1 & 2 Inspired) */}
+            {/* Electric Cyan/Indigo Gradient Button (Cyber style) */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 px-4 rounded-xl font-black text-slate-950 text-xs bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-300 hover:from-cyan-300 hover:to-indigo-200 active:scale-[0.99] transition-all shadow-[0_0_35px_rgba(56,189,248,0.4)] hover:shadow-[0_0_45px_rgba(56,189,248,0.6)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer mt-3"
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-white text-xs bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:opacity-95 active:scale-[0.99] transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer mt-3"
             >
               {isSubmitting ? (
-                <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>{isRegister ? `Create ${selectedRole === 'manager' ? 'Manager' : 'Member'} Account` : 'Log In'}</span>
+                  <span>Sign In</span>
                   <ArrowRight size={15} />
                 </>
               )}
             </button>
           </form>
+
+          {/* Secure Admin Note */}
+          <div className="mt-8 pt-6 border-t border-white/5 text-center">
+            <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider block">
+              Authorized personnel only
+            </span>
+            <p className="text-[9px] text-slate-600 mt-1 max-w-[280px] mx-auto leading-relaxed">
+              If you have lost your credentials, contact the System Administrator to provision your workspace access.
+            </p>
+          </div>
         </div>
+
       </div>
     </div>
   )
