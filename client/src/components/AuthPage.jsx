@@ -121,39 +121,40 @@ export function AuthPage() {
   const FeatureIcon = currentFeature.icon
 
   return (
-    <div className={`min-h-screen w-full flex items-center justify-center p-4 md:p-8 font-body selection:bg-indigo-500/20 selection:text-indigo-200 relative overflow-hidden transition-colors duration-300 ${
-      dark ? 'bg-[#030408]' : 'bg-[#f8fafc]'
+    <div className={`min-h-screen w-full flex items-center justify-center p-4 md:p-8 font-body selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-hidden transition-colors duration-300 ${
+      dark ? 'bg-[#04050b]' : 'bg-[#f3f4f6]'
     }`}>
       
       {/* High-Contrast Cyber Grid Pattern */}
-      <div className={`absolute inset-0 [background-size:32px_32px] opacity-80 pointer-events-none transition-colors duration-300 ${
+      <div className={`absolute inset-0 [background-size:28px_28px] opacity-80 pointer-events-none transition-colors duration-300 ${
         dark 
-          ? 'bg-[radial-gradient(rgba(99,102,241,0.12)1.5px,transparent_1.5px)]' 
-          : 'bg-[radial-gradient(rgba(99,102,241,0.06)1.5px,transparent_1.5px)]'
+          ? 'bg-[radial-gradient(rgba(99,102,241,0.18)1.5px,transparent_1.5px)]' 
+          : 'bg-[radial-gradient(rgba(99,102,241,0.08)1.5px,transparent_1.5px)]'
       }`} />
 
-      {/* Glowing Neon Aura Backlights (High Contrast glow) */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[130px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-cyan-500/15 rounded-full blur-[130px] pointer-events-none animate-pulse" />
+      {/* Massive Glowing Neon Aura Backlights (Vibrant Gradients for High Contrast) */}
+      <div className="absolute top-[-10%] left-[-10%] w-[700px] h-[700px] bg-gradient-to-tr from-indigo-600/30 to-purple-600/30 rounded-full blur-[140px] pointer-events-none animate-pulse duration-[8000ms]" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[700px] h-[700px] bg-gradient-to-br from-cyan-500/25 to-blue-500/25 rounded-full blur-[140px] pointer-events-none animate-pulse duration-[6000ms]" />
 
-      {/* Main Glassmorphic Split Container */}
+      {/* Main Glassmorphic Split Container (High Contrast Border Highlight) */}
       <div className={`w-full max-w-5xl rounded-[32px] overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10 transition-all duration-300 ${
         dark 
-          ? 'bg-[#0b0c16]/90 border border-white/[0.08] shadow-[0_30px_90px_rgba(0,0,0,0.85)]' 
-          : 'bg-[#ffffff]/90 border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)]'
+          ? 'bg-[#0a0b14]/95 border-2 border-white/[0.08] shadow-[0_30px_90px_rgba(0,0,0,0.9)] shadow-indigo-500/5' 
+          : 'bg-[#ffffff] border-2 border-slate-200/80 shadow-[0_20px_60px_rgba(0,0,0,0.08)]'
       }`}>
 
-        {/* ─── LEFT SHOWCASE PANEL (Vibrant Deep Blue/Black Gradient with Neon Glows - Always dark for brand pop) ─────────────────── */}
-        <div className="lg:col-span-6 p-8 lg:p-12 bg-gradient-to-br from-[#080915] via-[#0b0d1e] to-[#121635] relative flex flex-col justify-between overflow-hidden border-b lg:border-b-0 lg:border-r border-white/5">
-
-          {/* Glowing neon corner overlay */}
-          <div className="absolute -top-12 -left-12 w-80 h-80 rounded-full bg-gradient-to-tr from-indigo-500/30 to-cyan-500/30 opacity-40 blur-3xl pointer-events-none" />
+        {/* ─── LEFT SHOWCASE PANEL (Vibrant Neon Glow Gradient - Preserved Branding) ─────────────────── */}
+        <div className="lg:col-span-6 p-8 lg:p-12 bg-gradient-to-br from-[#0c0e25] via-[#10133a] to-[#04050b] relative flex flex-col justify-between overflow-hidden border-b lg:border-b-0 lg:border-r border-white/10">
+          
+          {/* Internal Glowing Overlay */}
+          <div className="absolute -top-12 -left-12 w-80 h-80 rounded-full bg-cyan-400/10 blur-[80px] pointer-events-none" />
+          <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none" />
 
           {/* Top Brand Mark */}
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-[2px] shadow-[0_0_20px_rgba(99,102,241,0.35)]">
-                <div className="w-full h-full bg-[#05060f] rounded-[14px] flex items-center justify-center font-display font-black text-xl text-white">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-[2px] shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                <div className="w-full h-full bg-[#030408] rounded-[14px] flex items-center justify-center font-display font-black text-xl text-white">
                   T
                 </div>
               </div>
@@ -163,8 +164,8 @@ export function AuthPage() {
               </div>
             </div>
 
-            <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 flex items-center gap-1.5 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-              <Zap size={11} className="text-cyan-400 animate-bounce" /> V2.0 LIVE
+            <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-200 flex items-center gap-1.5 shadow-[0_0_15px_rgba(6,182,212,0.25)]">
+              <Zap size={11} className="text-cyan-300 animate-bounce" /> V2.0 LIVE
             </span>
           </div>
 
@@ -179,8 +180,8 @@ export function AuthPage() {
                 transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-black shadow-[0_0_10px_rgba(6,182,212,0.1)]">
-                  <FeatureIcon size={14} className="text-cyan-400" />
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 text-xs font-black shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                  <FeatureIcon size={14} className="text-cyan-400 animate-pulse" />
                   <span>{currentFeature.title}</span>
                 </div>
 
@@ -202,8 +203,8 @@ export function AuthPage() {
                   onClick={() => setActiveFeatureIndex(idx)}
                   className={`text-xs font-black px-3.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
                     activeFeatureIndex === idx
-                      ? 'bg-indigo-500/20 border-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.25)]'
-                      : 'bg-white/[0.03] border-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                      ? 'bg-gradient-to-r from-indigo-600 to-cyan-500 border-transparent text-white shadow-[0_0_20px_rgba(6,182,212,0.35)]'
+                      : 'bg-white/[0.04] border-white/5 text-slate-400 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   {f.title}
@@ -213,24 +214,28 @@ export function AuthPage() {
           </div>
 
           {/* Bottom Info Note */}
-          <div className="relative z-10 pt-4 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-500 font-extrabold font-mono tracking-wider">
+          <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-400 font-extrabold font-mono tracking-wider">
             <span>SECURE SYSTEM ACCESS</span>
             <span className="text-cyan-400">SSL ENCRYPTED</span>
           </div>
         </div>
 
-        {/* ─── RIGHT FORM PANEL (Interactive Light/Dark Theme Panel) ─────────────────── */}
+        {/* ─── RIGHT FORM PANEL (High-Contrast, Cyber Inputs) ─────────────────── */}
         <div className={`lg:col-span-6 p-8 lg:p-12 flex flex-col justify-center relative border-l transition-all duration-300 ${
           dark 
-            ? 'bg-[#0c0d16] border-white/5' 
+            ? 'bg-[#07080f] border-white/[0.02]' 
             : 'bg-[#ffffff] border-slate-100'
         }`}>
 
-          {/* Header Title with Theme Toggle (Exactly matching user request) */}
+          {/* Header Title with Theme Toggle */}
           <div className="flex items-start justify-between mb-8">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-[10px] font-black px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 mb-3 uppercase tracking-widest shadow-[0_0_15px_rgba(6,182,212,0.1)]">
-                <Sparkles size={11} className="text-cyan-400" /> Authorized Access Only
+              <div className={`inline-flex items-center gap-1.5 text-[10px] font-black px-3 py-1 rounded-full border mb-3 uppercase tracking-widest shadow-sm transition-all ${
+                dark 
+                  ? 'bg-cyan-400/10 text-cyan-400 border-cyan-400/20 shadow-[0_0_15px_rgba(6,182,212,0.1)]' 
+                  : 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20'
+              }`}>
+                <Sparkles size={11} className={dark ? 'text-cyan-400' : 'text-indigo-600'} /> Authorized Access Only
               </div>
               <h1 className={`font-display text-3xl font-black tracking-tight leading-tight transition-colors duration-300 ${
                 dark ? 'text-white' : 'text-slate-900'
@@ -268,16 +273,18 @@ export function AuthPage() {
                 Your Email
               </label>
               <div className="relative">
-                <Mail className="w-4.5 h-4.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className={`w-4.5 h-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
+                  dark ? 'text-slate-500' : 'text-slate-400'
+                }`} />
                 <input
                   {...regInput('email', {
                     required: 'Email is required',
                     pattern: { value: /^\S+@\S+$/i, message: 'Invalid email address' }
                   })}
-                  className={`w-full border rounded-2xl pl-10 pr-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300 ${
+                  className={`w-full border-2 rounded-2xl pl-10 pr-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300 ${
                     dark 
-                      ? 'bg-[#121424] border-white/10 text-white placeholder-slate-600 focus:border-indigo-500' 
-                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-500'
+                      ? 'bg-[#121424] border-white/5 text-white placeholder-slate-600 focus:border-indigo-500 focus:bg-[#15172a]' 
+                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white'
                   }`}
                   placeholder="alex@company.com"
                 />
@@ -293,17 +300,19 @@ export function AuthPage() {
                 Your Password
               </label>
               <div className="relative">
-                <Lock className="w-4.5 h-4.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className={`w-4.5 h-4.5 absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors ${
+                  dark ? 'text-slate-500' : 'text-slate-400'
+                }`} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   {...regInput('password', {
                     required: 'Password is required',
                     minLength: { value: 6, message: 'Minimum 6 characters' }
                   })}
-                  className={`w-full border rounded-2xl pl-10 pr-11 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300 ${
+                  className={`w-full border-2 rounded-2xl pl-10 pr-11 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300 ${
                     dark 
-                      ? 'bg-[#121424] border-white/10 text-white placeholder-slate-600 focus:border-indigo-500' 
-                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-500'
+                      ? 'bg-[#121424] border-white/5 text-white placeholder-slate-600 focus:border-indigo-500 focus:bg-[#15172a]' 
+                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white'
                   }`}
                   placeholder="••••••••••••"
                 />

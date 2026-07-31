@@ -220,7 +220,7 @@ function DashboardLayout({ children }) {
       </aside>
 
       {/* Main content wrapper */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 ml-64 flex flex-col min-h-screen min-w-0 overflow-x-hidden">
         {/* Top Header */}
         <header className="h-16 border-b border-line px-8 flex items-center justify-between bg-surface/80 backdrop-blur-xl sticky top-0 z-10 shadow-sm transition-colors">
           {/* Quick Search */}
