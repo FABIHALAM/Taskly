@@ -30,6 +30,7 @@ import toast from 'react-hot-toast'
 import DashboardLayout from '../layout/DashboardLayout'
 import api from '../services/api'
 import AppLoader from '../components/AppLoader'
+import ConfirmDialog from '../components/ConfirmDialog'
 
 function AdminDashboard() {
   const navigate = useNavigate()
@@ -43,6 +44,7 @@ function AdminDashboard() {
   const [roleFilter, setRoleFilter] = useState('')
   const [activeTab, setActiveTab] = useState('users') // 'users' | 'analytics'
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null)
+  const [userToDelete, setUserToDelete] = useState(null)
 
   // Create User Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -102,13 +104,16 @@ function AdminDashboard() {
     }
   }
 
-  const handleDeleteUser = async (userId, userName) => {
-    if (!window.confirm(`Are you sure you want to permanently delete user "${userName}"? This action cannot be undone.`)) {
-      return
-    }
+  const handleDeleteUser = (userId, userName) => {
+    setUserToDelete({ id: userId, name: userName })
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return
     try {
-      await api.delete(`/admin/users/${userId}`)
-      toast.success(`User "${userName}" deleted successfully`)
+      await api.delete(`/admin/users/${userToDelete.id}`)
+      toast.success(`User "${userToDelete.name}" deleted successfully`)
+      setUserToDelete(null)
       fetchUsersAndAnalytics()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete user account')
@@ -909,6 +914,14 @@ function AdminDashboard() {
           )}
         </AnimatePresence>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!userToDelete}
+        title="Delete User Account"
+        message={`Are you sure you want to permanently delete user "${userToDelete?.name}"? This action cannot be undone and will revoke all workspace access.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setUserToDelete(null)}
+      />
     </DashboardLayout>
   )
 }
