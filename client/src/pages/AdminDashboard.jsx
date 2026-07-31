@@ -149,7 +149,7 @@ function AdminDashboard() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-line pb-4">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-line pb-4 w-full">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-2">
               <ShieldAlert size={13} />
@@ -205,7 +205,7 @@ function AdminDashboard() {
         </div>
 
         {/* Overview Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
           <div className="bg-surface border border-line rounded-2xl p-4 flex items-center gap-3 shadow-sm">
             <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400">
               <Users size={20} />
@@ -279,8 +279,8 @@ function AdminDashboard() {
             </div>
 
             {/* User Management Table */}
-            <div className="bg-surface border border-line rounded-3xl overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
+            <div className="bg-surface border border-line rounded-3xl overflow-hidden shadow-sm w-full max-w-full">
+              <div className="overflow-x-auto w-full">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-canvas/50 border-b border-line text-slate-400 uppercase tracking-wider font-bold">
                     <tr>
