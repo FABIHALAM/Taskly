@@ -27,9 +27,20 @@ const generateRefreshToken = (userId) =>
  */
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body
+    const rawRole = req.body.role
+    let assignedRole = 'member'
 
-    const existingUser = await User.findOne({ email })
+    // Manager role requires valid secret key; Member role registers freely
+    if (typeof rawRole === 'string' && rawRole.trim().toLowerCase() === 'manager') {
+      const validKey = process.env.MANAGER_SECRET_KEY || 'TASKLY-MGR-2026'
+      if (managerKey && managerKey.trim() === validKey) {
+        assignedRole = 'manager'
+      } else {
+        return sendError(res, 403, 'Invalid Workspace Manager Secret Key! Unable to register as Manager.')
+      }
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() })
     if (existingUser) {
       return sendError(res, 400, 'User already exists')
     }
@@ -37,7 +48,13 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    const newUser = await User.create({ name, email, password: hashedPassword })
+    const newUser = await User.create({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
+      role: assignedRole,
+      status: 'Active',
+    })
 
     return sendSuccess(res, 201, 'User registered successfully', {
       id: newUser._id,
@@ -60,9 +77,13 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email: email.toLowerCase().trim() })
     if (!user) {
       return sendError(res, 400, 'Invalid email or password')
+    }
+
+    if (user.status === 'Suspended') {
+      return sendError(res, 403, 'Your account has been suspended by Super Admin. Please contact workspace support.')
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
@@ -73,9 +94,40 @@ const loginUser = async (req, res) => {
     const accessToken  = generateAccessToken(user._id)
     const refreshToken = generateRefreshToken(user._id)
 
-    // Persist the refresh token in the DB (allows server-side revocation)
+    const Notification = require('../models/Notification')
+
+    // Detect client IP, Geolocation, and GPS coordinates
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1'
+    const loginLocation = req.body.clientLocation || 'Islamabad, Pakistan'
+
+    // Persist refresh token, last login timestamp, IP, Location, & Lat/Long
     user.refreshToken = refreshToken
+    user.lastLogin = new Date()
+    user.lastLoginIp = clientIp
+    user.lastLoginLocation = loginLocation
+    if (req.body.latitude) user.latitude = req.body.latitude
+    if (req.body.longitude) user.longitude = req.body.longitude
     await user.save()
+
+    // Real-time Notification dispatch to Super Admin
+    try {
+      const superAdmins = await User.find({ role: 'admin' })
+      const loginTimeFormatted = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      
+      for (const admin of superAdmins) {
+        if (admin._id.toString() !== user._id.toString()) {
+          await Notification.create({
+            recipient: admin._id,
+            type: 'user_login',
+            message: `🔑 Security Alert: ${user.name} (${user.role.toUpperCase()}) logged in at ${loginTimeFormatted} from ${loginLocation} (IP: ${clientIp})`,
+            targetType: 'User',
+            targetId: user._id,
+          })
+        }
+      }
+    } catch (notifErr) {
+      console.error('Failed to dispatch admin login notification', notifErr.message)
+    }
 
     return sendSuccess(res, 200, 'Login successful', {
       accessToken,
@@ -85,6 +137,7 @@ const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        lastLoginLocation: user.lastLoginLocation,
       },
     })
   } catch (error) {
@@ -154,7 +207,47 @@ const getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password -refreshToken')
     if (!user) return sendError(res, 404, 'User not found')
-    return sendSuccess(res, 200, 'Profile fetched', user)
+
+    // Normalize: add id field alongside _id for frontend compatibility
+    const userObj = user.toObject()
+    userObj.id = userObj._id.toString()
+
+    return sendSuccess(res, 200, 'Profile fetched', userObj)
+  } catch (error) {
+    return sendError(res, 500, 'Server error', error.message)
+  }
+}
+
+/**
+ * @route   PUT /api/auth/me
+ * @access  Protected
+ * Updates name, bio, phone, avatar, and optional password for logged in user.
+ */
+const updateMyProfile = async (req, res) => {
+  try {
+    const { name, bio, phone, avatar, password } = req.body
+    const user = await User.findById(req.userId)
+    if (!user) return sendError(res, 404, 'User not found')
+
+    if (name) user.name = name.trim()
+    if (bio !== undefined) user.bio = bio
+    if (phone !== undefined) user.phone = phone
+    if (avatar !== undefined) user.avatar = avatar
+
+    if (password && password.trim().length >= 6) {
+      const salt = await bcrypt.genSalt(10)
+      user.password = await bcrypt.hash(password.trim(), salt)
+      user.isTemporaryPassword = false
+    }
+
+    await user.save()
+
+    const userObj = user.toObject()
+    delete userObj.password
+    delete userObj.refreshToken
+    userObj.id = userObj._id.toString()
+
+    return sendSuccess(res, 200, 'Profile updated successfully', userObj)
   } catch (error) {
     return sendError(res, 500, 'Server error', error.message)
   }
@@ -166,4 +259,5 @@ module.exports = {
   refreshAccessToken,
   logoutUser,
   getMyProfile,
+  updateMyProfile,
 }

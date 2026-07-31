@@ -7,6 +7,7 @@ const {
   refreshAccessToken,
   logoutUser,
   getMyProfile,
+  updateMyProfile,
 } = require('../controllers/authController')
 const protect = require('../middleware/authMiddleware')
 const validateRequest = require('../middleware/validateRequest')
@@ -17,6 +18,7 @@ const registerValidation = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  // NOTE: role is intentionally NOT validated here — handled safely in controller
 ]
 
 const loginValidation = [
@@ -144,5 +146,6 @@ router.post('/logout', protect, logoutUser)
  *         description: Not authorized
  */
 router.get('/me', protect, getMyProfile)
+router.put('/me', protect, updateMyProfile)
 
 module.exports = router

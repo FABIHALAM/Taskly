@@ -1,23 +1,130 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Fraunces", serif;
-  --font-body: "Inter", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --font-display: "Outfit", "Inter", sans-serif;
+  --font-body: "Inter", "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 
-  --color-ink: #12121a;
-  --color-canvas: #f2f0ea;
+  --color-ink: #0f172a;
+  --color-canvas: #f8fafc;
   --color-surface: #ffffff;
-  --color-sidebar: #12121a;
-  --color-primary: #2c4bff;
-  --color-primary-soft: #e8ecff;
-  --color-brass: #c08a2e;
-  --color-mint: #2e9e6d;
-  --color-line: #e4e1d8;
+  --color-sidebar: #0f172a;
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-soft: #eef2ff;
+  --color-brass: #06b6d4; /* Accented Cyan */
+  --color-mint: #10b981;
+  --color-line: #e2e8f0;
 }
 
 body {
   font-family: var(--font-body);
   background-color: var(--color-canvas);
   color: var(--color-ink);
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+  letter-spacing: -0.011em;
+}
+
+/* Dark mode theme variables - Cyber Indigo & Deep space theme */
+.dark {
+  --color-ink: #f8fafc;
+  --color-canvas: #07080f;
+  --color-surface: #0f111a;
+  --color-sidebar: #080912;
+  --color-line: #1c1d2b;
+  --color-primary-soft: #1e1b4b;
+}
+
+/* Architectural Engineering Precision Grid Lines (8% Crisp Opacity) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark body::before {
+  background-image: 
+    linear-gradient(to right, rgba(129, 140, 248, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(129, 140, 248, 0.08) 1px, transparent 1px);
+  z-index: 0;
+}
+
+.dark body::after {
+  content: "";
+  position: fixed;
+  top: -15%;
+  right: -5%;
+  width: 750px;
+  height: 750px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(56, 189, 248, 0.04) 40%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(100px);
+}
+
+/* Glassmorphism 2.0 Utility Classes with Top Highlight Border */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.dark .glass-panel {
+  background: rgba(21, 23, 38, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* High-Class Hover Lift & Micro-Shadow Interactions */
+.glow-card {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 35px -10px rgba(99, 102, 241, 0.18);
+}
+
+.dark .glow-card:hover {
+  border-color: rgba(129, 140, 248, 0.45);
+  box-shadow: 0 16px 40px -10px rgba(99, 102, 241, 0.3), 0 0 20px rgba(99, 102, 241, 0.12);
+}
+
+/* Button Micro Scale Effect */
+button:active, a:active {
+  transform: scale(0.98);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
 }

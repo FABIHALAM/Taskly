@@ -6,10 +6,12 @@ const sendSuccess = (res, statusCode, message, data = null) => {
   })
 }
 
-const sendError = (res, statusCode, message) => {
+const sendError = (res, statusCode, message, details = null) => {
+  const finalMessage = (message === 'Server error' && details) ? details : message
   return res.status(statusCode).json({
     success: false,
-    message,
+    message: finalMessage,
+    details,
   })
 }
 

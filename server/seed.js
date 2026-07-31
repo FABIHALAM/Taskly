@@ -27,22 +27,32 @@ const ActivityLog = require('./models/ActivityLog')
 
 const USERS = [
   {
+    name: 'Super Admin',
+    email: 'admin@taskly.com',
+    password: 'password123',
+    role: 'admin',
+    department: 'Executive Board',
+  },
+  {
     name: 'Alice Johnson',
     email: 'alice@taskly.dev',
     password: 'password123',
-    role: 'admin',
+    role: 'manager',
+    department: 'Product Management',
   },
   {
     name: 'Bob Smith',
     email: 'bob@taskly.dev',
     password: 'password123',
     role: 'member',
+    department: 'Engineering',
   },
   {
     name: 'Sara Khan',
     email: 'sara@taskly.dev',
     password: 'password123',
     role: 'member',
+    department: 'Engineering',
   },
 ]
 
@@ -214,8 +224,8 @@ const seed = async () => {
     const hashedUsers = await Promise.all(
       USERS.map(async (u) => ({ ...u, password: await hashPassword(u.password) }))
     )
-    const [alice, bob, sara] = await User.insertMany(hashedUsers)
-    log(`👤 Created 3 users: ${alice.name}, ${bob.name}, ${sara.name}`)
+    const [adminUser, alice, bob, sara] = await User.insertMany(hashedUsers)
+    log(`👤 Created 4 users: ${adminUser.name}, ${alice.name}, ${bob.name}, ${sara.name}`)
 
     // ── 3. Create projects ─────────────────────────
     const [websiteProject, mobileProject, apiProject] = await Project.insertMany(
@@ -245,9 +255,10 @@ const seed = async () => {
     // ── Summary ────────────────────────────────────
     console.log('\n✨ Seed complete! Here is a summary:\n')
     console.log('  Users (password for all: "password123"):')
-    console.log(`    Admin  → ${alice.email}`)
-    console.log(`    Member → ${bob.email}`)
-    console.log(`    Member → ${sara.email}`)
+    console.log(`    Super Admin → ${adminUser.email}`)
+    console.log(`    Manager     → ${alice.email}`)
+    console.log(`    Member      → ${bob.email}`)
+    console.log(`    Member      → ${sara.email}`)
     console.log('\n  Projects:')
     console.log(`    ${websiteProject.name}  (owner: ${alice.name})`)
     console.log(`    ${mobileProject.name}      (owner: ${bob.name})`)
