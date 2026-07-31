@@ -5,10 +5,12 @@ import { loginUser } from '../services/authService'
 import api from '../services/api'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Mail, Lock, Sparkles, LayoutGrid, AlignLeft, ShieldCheck, Zap, Eye, EyeOff } from 'lucide-react'
+import { ArrowRight, Mail, Lock, Sparkles, LayoutGrid, AlignLeft, ShieldCheck, Zap, Eye, EyeOff, Sun, Moon } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 
 export function AuthPage() {
   const navigate = useNavigate()
+  const { dark, setDark } = useTheme()
   const [showPassword, setShowPassword] = useState(false)
   const [activeFeatureIndex, setActiveFeatureIndex] = useState(0)
 
@@ -119,19 +121,29 @@ export function AuthPage() {
   const FeatureIcon = currentFeature.icon
 
   return (
-    <div className="min-h-screen w-full bg-[#030408] text-slate-100 flex items-center justify-center p-4 md:p-8 font-body selection:bg-cyan-500/30 selection:text-cyan-200 relative overflow-hidden">
+    <div className={`min-h-screen w-full flex items-center justify-center p-4 md:p-8 font-body selection:bg-indigo-500/20 selection:text-indigo-200 relative overflow-hidden transition-colors duration-300 ${
+      dark ? 'bg-[#030408]' : 'bg-[#f8fafc]'
+    }`}>
       
       {/* High-Contrast Cyber Grid Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(rgba(99,102,241,0.12)1.5px,transparent_1.5px)] [background-size:32px_32px] opacity-80 pointer-events-none" />
+      <div className={`absolute inset-0 [background-size:32px_32px] opacity-80 pointer-events-none transition-colors duration-300 ${
+        dark 
+          ? 'bg-[radial-gradient(rgba(99,102,241,0.12)1.5px,transparent_1.5px)]' 
+          : 'bg-[radial-gradient(rgba(99,102,241,0.06)1.5px,transparent_1.5px)]'
+      }`} />
 
-      {/* Massive Glowing Neon Aura Backlights (High Contrast) */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/25 rounded-full blur-[130px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-cyan-500/20 rounded-full blur-[130px] pointer-events-none animate-pulse" />
+      {/* Glowing Neon Aura Backlights (High Contrast glow) */}
+      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[130px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-cyan-500/15 rounded-full blur-[130px] pointer-events-none animate-pulse" />
 
       {/* Main Glassmorphic Split Container */}
-      <div className="w-full max-w-5xl bg-[#0b0c16]/90 backdrop-blur-3xl border border-white/[0.08] rounded-[32px] shadow-[0_30px_90px_rgba(0,0,0,0.85)] overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
+      <div className={`w-full max-w-5xl rounded-[32px] overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10 transition-all duration-300 ${
+        dark 
+          ? 'bg-[#0b0c16]/90 border border-white/[0.08] shadow-[0_30px_90px_rgba(0,0,0,0.85)]' 
+          : 'bg-[#ffffff]/90 border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.06)]'
+      }`}>
 
-        {/* ─── LEFT SHOWCASE PANEL (Vibrant Deep Blue/Black Gradient with Neon Glows) ─────────────────── */}
+        {/* ─── LEFT SHOWCASE PANEL (Vibrant Deep Blue/Black Gradient with Neon Glows - Always dark for brand pop) ─────────────────── */}
         <div className="lg:col-span-6 p-8 lg:p-12 bg-gradient-to-br from-[#080915] via-[#0b0d1e] to-[#121635] relative flex flex-col justify-between overflow-hidden border-b lg:border-b-0 lg:border-r border-white/5">
 
           {/* Glowing neon corner overlay */}
@@ -207,26 +219,52 @@ export function AuthPage() {
           </div>
         </div>
 
-        {/* ─── RIGHT FORM PANEL (High Contrast Glow Panel) ─────────────────── */}
-        <div className="lg:col-span-6 p-8 lg:p-12 bg-[#0c0d16] flex flex-col justify-center relative border-l border-white/5">
+        {/* ─── RIGHT FORM PANEL (Interactive Light/Dark Theme Panel) ─────────────────── */}
+        <div className={`lg:col-span-6 p-8 lg:p-12 flex flex-col justify-center relative border-l transition-all duration-300 ${
+          dark 
+            ? 'bg-[#0c0d16] border-white/5' 
+            : 'bg-[#ffffff] border-slate-100'
+        }`}>
 
-          {/* Header Title */}
-          <div className="mb-8">
-            <div className="inline-flex items-center gap-1.5 text-[10px] font-black px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 mb-3.5 uppercase tracking-widest shadow-[0_0_15px_rgba(6,182,212,0.1)]">
-              <Sparkles size={11} className="text-cyan-400" /> Authorized Access Only
+          {/* Header Title with Theme Toggle (Exactly matching user request) */}
+          <div className="flex items-start justify-between mb-8">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-[10px] font-black px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 mb-3 uppercase tracking-widest shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                <Sparkles size={11} className="text-cyan-400" /> Authorized Access Only
+              </div>
+              <h1 className={`font-display text-3xl font-black tracking-tight leading-tight transition-colors duration-300 ${
+                dark ? 'text-white' : 'text-slate-900'
+              }`}>
+                Log In to Taskly™
+              </h1>
             </div>
-            <h1 className="font-display text-3xl font-black text-white tracking-tight leading-tight">
-              Log In to Taskly™
-            </h1>
-            <p className="text-slate-400 text-xs lg:text-sm mt-2 leading-relaxed">
-              Access is restricted to authorized personnel. Use the secure credentials assigned by your Super Admin.
-            </p>
+            
+            <button
+              type="button"
+              onClick={() => setDark(!dark)}
+              className={`p-2.5 rounded-xl border transition-colors cursor-pointer shadow-sm ${
+                dark 
+                  ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:bg-white/10' 
+                  : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-950 hover:bg-slate-100'
+              }`}
+              title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {dark ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} />}
+            </button>
           </div>
+
+          <p className={`text-xs lg:text-sm -mt-4 mb-6 leading-relaxed transition-colors duration-300 ${
+            dark ? 'text-slate-400' : 'text-slate-500'
+          }`}>
+            Access is restricted to authorized personnel. Use the secure credentials assigned by your Super Admin.
+          </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email Input */}
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <label className={`block text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                dark ? 'text-slate-400' : 'text-slate-500'
+              }`}>
                 Your Email
               </label>
               <div className="relative">
@@ -236,7 +274,11 @@ export function AuthPage() {
                     required: 'Email is required',
                     pattern: { value: /^\S+@\S+$/i, message: 'Invalid email address' }
                   })}
-                  className="w-full bg-[#121424] border border-white/10 rounded-2xl pl-10 pr-4 py-3.5 text-white placeholder-slate-600 text-xs font-bold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all"
+                  className={`w-full border rounded-2xl pl-10 pr-4 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300 ${
+                    dark 
+                      ? 'bg-[#121424] border-white/10 text-white placeholder-slate-600 focus:border-indigo-500' 
+                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-500'
+                  }`}
                   placeholder="alex@company.com"
                 />
               </div>
@@ -245,7 +287,9 @@ export function AuthPage() {
 
             {/* Password Input */}
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <label className={`block text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                dark ? 'text-slate-400' : 'text-slate-500'
+              }`}>
                 Your Password
               </label>
               <div className="relative">
@@ -256,13 +300,19 @@ export function AuthPage() {
                     required: 'Password is required',
                     minLength: { value: 6, message: 'Minimum 6 characters' }
                   })}
-                  className="w-full bg-[#121424] border border-white/10 rounded-2xl pl-10 pr-11 py-3.5 text-white placeholder-slate-600 text-xs font-bold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all"
+                  className={`w-full border rounded-2xl pl-10 pr-11 py-3.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300 ${
+                    dark 
+                      ? 'bg-[#121424] border-white/10 text-white placeholder-slate-600 focus:border-indigo-500' 
+                      : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-indigo-500'
+                  }`}
                   placeholder="••••••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer p-1"
+                  className={`absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors cursor-pointer p-1 ${
+                    dark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'
+                  }`}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -289,10 +339,14 @@ export function AuthPage() {
 
           {/* Secure Admin Note */}
           <div className="mt-8 pt-6 border-t border-white/5 text-center">
-            <span className="text-[9px] text-slate-500 font-extrabold uppercase tracking-widest block">
+            <span className={`text-[9px] font-extrabold uppercase tracking-widest block transition-colors duration-300 ${
+              dark ? 'text-slate-500' : 'text-slate-400'
+            }`}>
               SECURE WORKSPACE TELEMETRY
             </span>
-            <p className="text-[9px] text-slate-600 mt-1 max-w-[280px] mx-auto leading-relaxed">
+            <p className={`text-[9px] mt-1 max-w-[280px] mx-auto leading-relaxed transition-colors duration-300 ${
+              dark ? 'text-slate-600' : 'text-slate-500'
+            }`}>
               If you have lost your credentials, contact the System Administrator to provision your workspace access.
             </p>
           </div>
