@@ -162,9 +162,29 @@ const updateUserStatusAdmin = async (req, res) => {
   }
 }
 
+const deleteUserAdmin = async (req, res) => {
+  try {
+    const { userId } = req.params
+
+    if (userId.toString() === req.userId.toString()) {
+      return sendError(res, 400, 'You cannot delete your own account')
+    }
+
+    const user = await User.findById(userId)
+    if (!user) return sendError(res, 404, 'User not found')
+
+    await User.findByIdAndDelete(userId)
+
+    return sendSuccess(res, 200, 'User account deleted successfully')
+  } catch (error) {
+    return sendError(res, 500, 'Server error', error.message)
+  }
+}
+
 module.exports = {
   getAllUsersAdmin,
   createUserAdmin,
   updateUserRoleAdmin,
   updateUserStatusAdmin,
+  deleteUserAdmin,
 }

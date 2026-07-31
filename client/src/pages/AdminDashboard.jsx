@@ -23,6 +23,7 @@ import {
   User,
   Eye,
   EyeOff,
+  Trash2,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -98,6 +99,19 @@ function AdminDashboard() {
       fetchUsersAndAnalytics()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update user status')
+    }
+  }
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user "${userName}"? This action cannot be undone.`)) {
+      return
+    }
+    try {
+      await api.delete(`/admin/users/${userId}`)
+      toast.success(`User "${userName}" deleted successfully`)
+      fetchUsersAndAnalytics()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete user account')
     }
   }
 
@@ -412,16 +426,25 @@ function AdminDashboard() {
                                 👁️ Inspect Bio
                               </button>
                               {!isSelf && (
-                                <button
-                                  onClick={() => handleStatusToggle(u._id, u.status)}
-                                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                                    u.status === 'Suspended'
-                                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                                      : 'border border-rose-500/30 text-rose-400 hover:bg-rose-500/10'
-                                  }`}
-                                >
-                                  {u.status === 'Suspended' ? 'Activate' : 'Suspend'}
-                                </button>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => handleStatusToggle(u._id, u.status)}
+                                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                      u.status === 'Suspended'
+                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                        : 'border border-rose-500/30 text-rose-400 hover:bg-rose-500/10'
+                                    }`}
+                                  >
+                                    {u.status === 'Suspended' ? 'Activate' : 'Suspend'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteUser(u._id, u.name)}
+                                    className="p-1.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all cursor-pointer"
+                                    title="Delete User"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
                               )}
                             </td>
                           </tr>
