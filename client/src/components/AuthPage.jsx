@@ -155,7 +155,7 @@ export function AuthPage() {
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-2xl overflow-hidden bg-white p-1 shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center justify-center">
                 <img 
-                  src="https://mepcobill.pk/wp-content/uploads/2023/12/mepco-logo.png" 
+                  src="/mepco-logo.png" 
                   alt="MEPCO Logo" 
                   className="w-full h-full object-contain"
                   onError={(e) => {

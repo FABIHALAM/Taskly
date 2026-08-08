@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, User, Settings, LogOut, Bell, Search, Sun, Moon, Sparkles, Crown, UserCheck, Layers, Zap } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, User, Settings, LogOut, Bell, Search, Sun, Moon, Sparkles, Crown, UserCheck, Layers, Zap, ExternalLink } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { getNotifications, markAllRead } from '../services/notificationService'
 import api from '../services/api'
@@ -140,7 +140,7 @@ function DashboardLayout({ children }) {
           <Link to="/dashboard" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-xl overflow-hidden bg-white p-1 shadow-lg flex items-center justify-center group-hover:scale-105 transition-transform">
               <img 
-                src="https://mepcobill.pk/wp-content/uploads/2023/12/mepco-logo.png" 
+                src="/mepco-logo.png" 
                 alt="MEPCO Logo" 
                 className="w-full h-full object-contain"
                 onError={(e) => {
@@ -227,6 +227,20 @@ function DashboardLayout({ children }) {
             <LogOut size={16} />
             Sign Out
           </button>
+          
+          <div className="mt-3 pt-2.5 border-t border-white/5 text-center">
+            <span className="text-[9px] text-slate-500 font-mono tracking-widest block uppercase">Developed for MEPCO by</span>
+            <a 
+              href="https://fabih.vercel.app" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold font-mono inline-flex items-center gap-1 justify-center mt-0.5 tracking-wide hover:underline cursor-pointer transition-colors"
+              title="View Developer Portfolio"
+            >
+              <span>M.Fabih Alam Khan</span>
+              <ExternalLink size={9} className="opacity-75" />
+            </a>
+          </div>
         </div>
       </aside>
 
