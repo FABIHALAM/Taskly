@@ -230,7 +230,15 @@ function DashboardLayout({ children }) {
           
           <div className="mt-3 pt-2.5 border-t border-white/5 text-center">
             <span className="text-[9px] text-slate-500 font-mono tracking-widest block uppercase">Developed for MEPCO by</span>
-            <span className="text-[10px] text-cyan-400 font-bold font-mono block mt-0.5 tracking-wide">M. FABIHALAM KHAN</span>
+            <a 
+              href="https://fabih.vercel.app" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold font-mono block mt-0.5 tracking-wide hover:underline cursor-pointer transition-colors"
+              title="View Developer Portfolio"
+            >
+              M.Fabih Alam Khan
+            </a>
           </div>
         </div>
       </aside>
