@@ -16,6 +16,7 @@ const protect = require('../middleware/authMiddleware')
  *         description: Returns total projects, assigned tasks, overdue/due-soon alerts
  */
 router.get('/dashboard', protect, getDashboardStats)
+router.get('/overview', protect, getOverviewStats)
 
 /**
  * @swagger

@@ -145,7 +145,7 @@ export function CommandPalette({ isOpen, onClose }) {
               <span className="px-2 py-0.5 rounded bg-white/10 text-slate-300 font-mono text-[10px]">⌘K</span>
               <span>to toggle anytime</span>
             </div>
-            <span className="text-indigo-400 font-bold">Taskly Quick Actions</span>
+            <span className="text-indigo-400 font-bold">MEPCO Portal Actions</span>
           </div>
         </motion.div>
       </div>

@@ -23,12 +23,14 @@ import {
   User,
   Eye,
   EyeOff,
+  Trash2,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import DashboardLayout from '../layout/DashboardLayout'
 import api from '../services/api'
 import AppLoader from '../components/AppLoader'
+import ConfirmDialog from '../components/ConfirmDialog'
 
 function AdminDashboard() {
   const navigate = useNavigate()
@@ -42,6 +44,7 @@ function AdminDashboard() {
   const [roleFilter, setRoleFilter] = useState('')
   const [activeTab, setActiveTab] = useState('users') // 'users' | 'analytics'
   const [selectedUserForDetails, setSelectedUserForDetails] = useState(null)
+  const [userToDelete, setUserToDelete] = useState(null)
 
   // Create User Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -101,6 +104,22 @@ function AdminDashboard() {
     }
   }
 
+  const handleDeleteUser = (userId, userName) => {
+    setUserToDelete({ id: userId, name: userName })
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return
+    try {
+      await api.delete(`/admin/users/${userToDelete.id}`)
+      toast.success(`User "${userToDelete.name}" deleted successfully`)
+      setUserToDelete(null)
+      fetchUsersAndAnalytics()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete user account')
+    }
+  }
+
   const handleCreateUser = async (e) => {
     e.preventDefault()
     if (!formData.name.trim() || !formData.email.trim()) return
@@ -149,7 +168,7 @@ function AdminDashboard() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Header */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-line pb-4 w-full">
+        <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-4 border-b border-line pb-4 w-full">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-2">
               <ShieldAlert size={13} />
@@ -412,16 +431,25 @@ function AdminDashboard() {
                                 👁️ Inspect Bio
                               </button>
                               {!isSelf && (
-                                <button
-                                  onClick={() => handleStatusToggle(u._id, u.status)}
-                                  className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                                    u.status === 'Suspended'
-                                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                                      : 'border border-rose-500/30 text-rose-400 hover:bg-rose-500/10'
-                                  }`}
-                                >
-                                  {u.status === 'Suspended' ? 'Activate' : 'Suspend'}
-                                </button>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => handleStatusToggle(u._id, u.status)}
+                                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                      u.status === 'Suspended'
+                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                        : 'border border-rose-500/30 text-rose-400 hover:bg-rose-500/10'
+                                    }`}
+                                  >
+                                    {u.status === 'Suspended' ? 'Activate' : 'Suspend'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteUser(u._id, u.name)}
+                                    className="p-1.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all cursor-pointer"
+                                    title="Delete User"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
                               )}
                             </td>
                           </tr>
@@ -886,6 +914,14 @@ function AdminDashboard() {
           )}
         </AnimatePresence>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!userToDelete}
+        title="Delete User Account"
+        message={`Are you sure you want to permanently delete user "${userToDelete?.name}"? This action cannot be undone and will revoke all workspace access.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setUserToDelete(null)}
+      />
     </DashboardLayout>
   )
 }

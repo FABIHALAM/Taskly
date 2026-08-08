@@ -367,9 +367,17 @@ function Dashboard() {
 
             {/* Widget 1: Profile Card */}
             <div className="bg-surface border border-line rounded-3xl p-5 shadow-sm flex flex-col items-center text-center space-y-3 relative overflow-hidden">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-indigo-500/25">
-                {user.name ? user.name[0] : 'U'}
-              </div>
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-16 h-16 rounded-full object-cover shadow-lg border border-indigo-500/20"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-indigo-500/25">
+                  {user.name ? user.name[0] : 'U'}
+                </div>
+              )}
               <div>
                 <h3 className="font-display font-extrabold text-sm text-ink">{user.name || 'User'}</h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">{user.email || ''}</p>

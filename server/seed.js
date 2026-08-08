@@ -1,20 +1,17 @@
 /**
- * Seed Script — Taskly
+ * Seed Script — MEPCO Multan Workspace Portal
  * ---------------------------------------------------
- * Populates the database with realistic sample data:
- *   - 3 Users  (1 admin + 2 members)
- *   - 3 Projects
- *   - 12 Tasks  (spread across projects, varied statuses/priorities)
- *   - Activity Logs  (auto-generated for each task action)
+ * Populates the database with realistic sample data customized for
+ * MEPCO Multan (Multan Electric Power Company) IT & Operations.
  *
  * Usage:
  *   node seed.js          → clears DB then inserts fresh data
- *   node seed.js --fresh  → same as above (explicit flag)
  *
  * WARNING: This script drops all existing data before seeding.
  */
 
-require('dotenv').config()
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 
@@ -23,175 +20,185 @@ const Project     = require('./models/project')
 const Task        = require('./models/Task')
 const ActivityLog = require('./models/ActivityLog')
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
+// ─── MEPCO Custom Sample Data ────────────────────────────────────────────────
 
 const USERS = [
   {
-    name: 'Super Admin',
-    email: 'admin@taskly.com',
+    name: 'MEPCO Super Admin',
+    email: 'admin@mepco.com',
     password: 'password123',
     role: 'admin',
-    department: 'Executive Board',
+    department: 'IT & Security Board (HQ)',
   },
   {
-    name: 'Alice Johnson',
-    email: 'alice@taskly.dev',
+    name: 'Engr. Asif Mahmood',
+    email: 'asif@mepco.com',
     password: 'password123',
     role: 'manager',
-    department: 'Product Management',
+    department: 'Grid Operations & Automation',
   },
   {
-    name: 'Bob Smith',
-    email: 'bob@taskly.dev',
+    name: 'Engr. Fariha Alam',
+    email: 'fariha@mepco.com',
     password: 'password123',
     role: 'member',
-    department: 'Engineering',
+    department: 'Software Engineering & ERP',
   },
   {
-    name: 'Sara Khan',
-    email: 'sara@taskly.dev',
+    name: 'Yasir Shah',
+    email: 'yasir@mepco.com',
     password: 'password123',
     role: 'member',
-    department: 'Engineering',
+    department: 'Sub-Divisional Operations & Billing',
   },
 ]
 
-// Projects are defined as functions so they receive real user IDs
-const buildProjects = (alice, bob, sara) => [
+// Projects representing MEPCO systems
+const buildProjects = (asif, fariha, yasir) => [
   {
-    name: 'Website Redesign',
-    description: 'Complete overhaul of the company marketing site — new branding, improved UX, mobile-first.',
-    owner: alice._id,
-    members: [alice._id, bob._id, sara._id],
+    name: 'Billing & ERP Integration',
+    description: 'Sync local subdivision bill generation engines with central MEPCO Oracle ERP database.',
+    owner: asif._id,
+    members: [
+      { user: asif._id, role: 'owner' },
+      { user: fariha._id, role: 'member' },
+      { user: yasir._id, role: 'member' }
+    ],
   },
   {
-    name: 'Mobile App Launch',
-    description: 'iOS and Android app for the customer-facing product. Target launch: Q4.',
-    owner: bob._id,
-    members: [bob._id, sara._id],
+    name: 'Smart Meter Telemetry Portal',
+    description: 'Deploy real-time API endpoints and dashboards to capture telemetry data from 10,000 smart meters in Multan Cantt division.',
+    owner: fariha._id,
+    members: [
+      { user: fariha._id, role: 'owner' },
+      { user: yasir._id, role: 'member' }
+    ],
   },
   {
-    name: 'API Integration Sprint',
-    description: 'Connect internal services to third-party payment and notification providers.',
-    owner: sara._id,
-    members: [alice._id, sara._id],
+    name: 'Grid Operations & O&M Hub',
+    description: 'Track regional grid station feeder shutdowns, maintenance tickets, and load-shedding schedules.',
+    owner: yasir._id,
+    members: [
+      { user: yasir._id, role: 'owner' },
+      { user: asif._id, role: 'member' }
+    ],
   },
 ]
 
-// Tasks are defined as functions so they receive real project/user IDs
-const buildTasks = (alice, bob, sara, websiteProject, mobileProject, apiProject) => [
-  // ── Website Redesign ──────────────────────────────
+// Tasks representing MEPCO operations
+const buildTasks = (asif, fariha, yasir, billingProject, smartMeterProject, gridProject) => [
+  // ── Billing & ERP Integration ─────────────────────
   {
-    title: 'Design new homepage mockup',
-    description: 'Create Figma designs for the redesigned homepage. Include hero section, features grid, and footer.',
+    title: 'Design customer billing tariff calculation scripts',
+    description: 'Create Mongoose/JavaScript scripts to calculate domestic/commercial tariffs based on NEPRA rules.',
     status: 'Done',
     priority: 'High',
-    project: websiteProject._id,
-    assignee: sara._id,
-    dueDate: new Date('2026-07-10'),
+    project: billingProject._id,
+    assignee: yasir._id,
+    dueDate: new Date('2026-08-15'),
   },
   {
-    title: 'Implement responsive navbar',
-    description: 'Convert the static navbar to a fully responsive component. Mobile hamburger menu required.',
+    title: 'Sync local subdivision bill engines',
+    description: 'Write REST endpoints to post monthly load statistics from local sub-divisions to main headquarters.',
     status: 'In Progress',
     priority: 'High',
-    project: websiteProject._id,
-    assignee: bob._id,
-    dueDate: new Date('2026-07-20'),
+    project: billingProject._id,
+    assignee: fariha._id,
+    dueDate: new Date('2026-08-22'),
   },
   {
-    title: 'Write SEO meta tags for all pages',
-    description: 'Add proper title, description, and Open Graph tags to each page.',
+    title: 'Write SEO meta tags for portal documentation',
+    description: 'Create proper internal portal tags and description for local engineers documentation.',
     status: 'To Do',
     priority: 'Medium',
-    project: websiteProject._id,
-    assignee: alice._id,
-    dueDate: new Date('2026-07-25'),
+    project: billingProject._id,
+    assignee: asif._id,
+    dueDate: new Date('2026-08-28'),
   },
   {
-    title: 'Optimize images and assets',
-    description: 'Convert all PNGs to WebP, lazy-load below-the-fold images, compress JS bundles.',
+    title: 'Optimize billing records load speed',
+    description: 'Create indices on billings database schemas for fast retrieval of client bill history.',
     status: 'To Do',
     priority: 'Low',
-    project: websiteProject._id,
-    assignee: bob._id,
-    dueDate: new Date('2026-07-30'),
+    project: billingProject._id,
+    assignee: fariha._id,
+    dueDate: new Date('2026-09-02'),
   },
 
-  // ── Mobile App Launch ─────────────────────────────
+  // ── Smart Meter Telemetry Portal ──────────────────
   {
-    title: 'Set up React Native project structure',
-    description: 'Initialise RN project, configure ESLint/Prettier, set up folder structure and navigation stack.',
+    title: 'Deploy smart meter reading transmission endpoints',
+    description: 'Establish secure backend API router to parse incoming TCP streams from grid smart meters.',
     status: 'Done',
     priority: 'High',
-    project: mobileProject._id,
-    assignee: bob._id,
-    dueDate: new Date('2026-07-05'),
+    project: smartMeterProject._id,
+    assignee: fariha._id,
+    dueDate: new Date('2026-08-12'),
   },
   {
     title: 'Build login and registration screens',
-    description: 'Pixel-perfect implementation of the login and register screens from the approved Figma spec.',
+    description: 'Pixel-perfect implementation of the login and register screens from the approved MEPCO Figma spec.',
     status: 'In Progress',
     priority: 'High',
-    project: mobileProject._id,
-    assignee: sara._id,
-    dueDate: new Date('2026-07-18'),
+    project: smartMeterProject._id,
+    assignee: yasir._id,
+    dueDate: new Date('2026-08-20'),
   },
   {
-    title: 'Integrate push notifications',
-    description: 'Set up Firebase Cloud Messaging for both iOS and Android. Handle foreground and background states.',
+    title: 'Integrate push notifications for power breakdown alerts',
+    description: 'Configure automated SMS/Push notification alerts for target consumer zones during maintenance.',
     status: 'To Do',
     priority: 'Medium',
-    project: mobileProject._id,
-    assignee: bob._id,
-    dueDate: new Date('2026-08-01'),
+    project: smartMeterProject._id,
+    assignee: fariha._id,
+    dueDate: new Date('2026-09-05'),
   },
   {
-    title: 'Write unit tests for auth flow',
-    description: 'Cover login, register, token refresh, and logout with Jest + React Native Testing Library.',
+    title: 'Write unit tests for telemetry payloads',
+    description: 'Verify packet data integrity validation functions using Jest unit test cases.',
     status: 'To Do',
     priority: 'Medium',
-    project: mobileProject._id,
-    assignee: sara._id,
-    dueDate: new Date('2026-08-10'),
+    project: smartMeterProject._id,
+    assignee: yasir._id,
+    dueDate: new Date('2026-09-12'),
   },
 
-  // ── API Integration Sprint ────────────────────────
+  // ── Grid Operations & O&M Hub ─────────────────────
   {
-    title: 'Integrate Stripe payment gateway',
-    description: 'Implement charge creation, webhook handling, and refund endpoints using the Stripe Node SDK.',
+    title: 'Resolve Multan grid feeder telemetry database sync delay',
+    description: 'Optimize database logs for grid station feeder loads to prevent latency spikes in live dashboard.',
     status: 'In Progress',
     priority: 'High',
-    project: apiProject._id,
-    assignee: alice._id,
-    dueDate: new Date('2026-07-22'),
+    project: gridProject._id,
+    assignee: asif._id,
+    dueDate: new Date('2026-08-25'),
   },
   {
-    title: 'Set up SendGrid email service',
-    description: 'Configure transactional email templates for welcome, password-reset, and invoice emails.',
+    title: 'Configure automated email reporting for feeders load',
+    description: 'Write daily schedule triggers to compile grid station outages and dispatch records to board directors.',
     status: 'Done',
     priority: 'Medium',
-    project: apiProject._id,
-    assignee: sara._id,
-    dueDate: new Date('2026-07-08'),
+    project: gridProject._id,
+    assignee: yasir._id,
+    dueDate: new Date('2026-08-14'),
   },
   {
-    title: 'Add rate limiting to public endpoints',
-    description: 'Use express-rate-limit to cap unauthenticated requests at 100/15 min per IP.',
+    title: 'Add rate limiting to public telemetry endpoints',
+    description: 'Protect smart meter APIs from overload using rate-limiter rules.',
     status: 'To Do',
     priority: 'Medium',
-    project: apiProject._id,
-    assignee: alice._id,
-    dueDate: new Date('2026-07-28'),
+    project: gridProject._id,
+    assignee: asif._id,
+    dueDate: new Date('2026-08-30'),
   },
   {
-    title: 'Document all API endpoints in Swagger',
-    description: 'Ensure every route has JSDoc annotations visible in /api-docs. Include request/response examples.',
+    title: 'Document all grid endpoints in Swagger',
+    description: 'Add JSDoc documentation mapping for all grid operations endpoints.',
     status: 'To Do',
     priority: 'Low',
-    project: apiProject._id,
-    assignee: alice._id,
-    dueDate: new Date('2026-08-05'),
+    project: gridProject._id,
+    assignee: asif._id,
+    dueDate: new Date('2026-09-08'),
   },
 ]
 
@@ -209,7 +216,7 @@ const log = (msg) => console.log(`  ${msg}`)
 const seed = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI)
-    console.log('\n🌱 Connected to MongoDB — starting seed...\n')
+    console.log('\n🌱 Connected to MongoDB — starting MEPCO seed...\n')
 
     // ── 1. Clear existing data ─────────────────────
     await Promise.all([
@@ -224,18 +231,18 @@ const seed = async () => {
     const hashedUsers = await Promise.all(
       USERS.map(async (u) => ({ ...u, password: await hashPassword(u.password) }))
     )
-    const [adminUser, alice, bob, sara] = await User.insertMany(hashedUsers)
-    log(`👤 Created 4 users: ${adminUser.name}, ${alice.name}, ${bob.name}, ${sara.name}`)
+    const [adminUser, asif, fariha, yasir] = await User.insertMany(hashedUsers)
+    log(`👤 Created 4 users: ${adminUser.name}, ${asif.name}, ${fariha.name}, ${yasir.name}`)
 
     // ── 3. Create projects ─────────────────────────
-    const [websiteProject, mobileProject, apiProject] = await Project.insertMany(
-      buildProjects(alice, bob, sara)
+    const [billingProject, smartMeterProject, gridProject] = await Project.insertMany(
+      buildProjects(asif, fariha, yasir)
     )
-    log(`📁 Created 3 projects: "${websiteProject.name}", "${mobileProject.name}", "${apiProject.name}"`)
+    log(`📁 Created 3 projects: "${billingProject.name}", "${smartMeterProject.name}", "${gridProject.name}"`)
 
     // ── 4. Create tasks ────────────────────────────
     const tasks = await Task.insertMany(
-      buildTasks(alice, bob, sara, websiteProject, mobileProject, apiProject)
+      buildTasks(asif, fariha, yasir, billingProject, smartMeterProject, gridProject)
     )
     log(`✅ Created ${tasks.length} tasks across all projects`)
 
@@ -253,16 +260,16 @@ const seed = async () => {
     log(`📋 Created ${activityLogs.length} activity log entries`)
 
     // ── Summary ────────────────────────────────────
-    console.log('\n✨ Seed complete! Here is a summary:\n')
+    console.log('\n✨ MEPCO Seed complete! Here is a summary:\n')
     console.log('  Users (password for all: "password123"):')
     console.log(`    Super Admin → ${adminUser.email}`)
-    console.log(`    Manager     → ${alice.email}`)
-    console.log(`    Member      → ${bob.email}`)
-    console.log(`    Member      → ${sara.email}`)
+    console.log(`    Manager     → ${asif.email}`)
+    console.log(`    Member      → ${fariha.email}`)
+    console.log(`    Member      → ${yasir.email}`)
     console.log('\n  Projects:')
-    console.log(`    ${websiteProject.name}  (owner: ${alice.name})`)
-    console.log(`    ${mobileProject.name}      (owner: ${bob.name})`)
-    console.log(`    ${apiProject.name}  (owner: ${sara.name})`)
+    console.log(`    ${billingProject.name}  (owner: ${asif.name})`)
+    console.log(`    ${smartMeterProject.name}      (owner: ${fariha.name})`)
+    console.log(`    ${gridProject.name}  (owner: ${yasir.name})`)
     console.log(`\n  Tasks: ${tasks.length} total`)
     console.log(`    Done: ${tasks.filter(t => t.status === 'Done').length}`)
     console.log(`    In Progress: ${tasks.filter(t => t.status === 'In Progress').length}`)

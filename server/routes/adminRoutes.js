@@ -7,6 +7,7 @@ const {
   createUserAdmin,
   updateUserRoleAdmin,
   updateUserStatusAdmin,
+  deleteUserAdmin,
 } = require('../controllers/adminController')
 
 router.use(protect, requireAdmin)
@@ -15,5 +16,6 @@ router.get('/users', getAllUsersAdmin)
 router.post('/create-user', createUserAdmin)
 router.patch('/users/:userId/role', updateUserRoleAdmin)
 router.patch('/users/:userId/status', updateUserStatusAdmin)
+router.delete('/users/:userId', deleteUserAdmin)
 
 module.exports = router
