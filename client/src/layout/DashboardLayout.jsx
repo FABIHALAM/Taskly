@@ -140,7 +140,7 @@ function DashboardLayout({ children }) {
           <Link to="/dashboard" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 rounded-xl overflow-hidden bg-white p-1 shadow-lg flex items-center justify-center group-hover:scale-105 transition-transform">
               <img 
-                src="https://mepcobill.pk/wp-content/uploads/2023/12/mepco-logo.png" 
+                src="/mepco-logo.png" 
                 alt="MEPCO Logo" 
                 className="w-full h-full object-contain"
                 onError={(e) => {
@@ -227,6 +227,11 @@ function DashboardLayout({ children }) {
             <LogOut size={16} />
             Sign Out
           </button>
+          
+          <div className="mt-3 pt-2.5 border-t border-white/5 text-center">
+            <span className="text-[9px] text-slate-500 font-mono tracking-widest block uppercase">Developed for MEPCO by</span>
+            <span className="text-[10px] text-cyan-400 font-bold font-mono block mt-0.5 tracking-wide">M. FABIHALAM KHAN</span>
+          </div>
         </div>
       </aside>
 
