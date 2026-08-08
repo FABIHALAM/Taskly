@@ -23,18 +23,18 @@ export function AuthPage() {
 
   const features = [
     {
-      title: 'TasklyIdeas™ Board',
-      desc: 'Fluid drag-and-drop Kanban columns for complete task tracking.',
+      title: 'Grid Telemetry Board',
+      desc: 'Fluid drag-and-drop Kanban columns to track grid station loads and maintenance schedules.',
       icon: LayoutGrid,
     },
     {
-      title: 'Gantt Timeline Sync',
-      desc: 'Interactive 14-day timeline view to monitor deadlines & milestones.',
+      title: 'ERP & Billing Sync',
+      desc: 'Interactive timeline scheduling to track billing ERP integrations and NEPRA tariff updates.',
       icon: AlignLeft,
     },
     {
-      title: 'Role-Based Access',
-      desc: 'Manager controls project settings while members execute assigned tasks.',
+      title: 'HQ Access Control',
+      desc: 'Supervisory geolocation logs and secure role provisioning for sub-divisional IT engineers.',
       icon: ShieldCheck,
     },
   ]
@@ -153,14 +153,23 @@ export function AuthPage() {
           {/* Top Brand Mark */}
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-[2px] shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-                <div className="w-full h-full bg-[#030408] rounded-[14px] flex items-center justify-center font-display font-black text-xl text-white">
-                  T
+              <div className="w-10 h-10 rounded-2xl overflow-hidden bg-white p-1 shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center justify-center">
+                <img 
+                  src="https://mepcobill.pk/wp-content/uploads/2023/12/mepco-logo.png" 
+                  alt="MEPCO Logo" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div style={{ display: 'none' }} className="w-full h-full bg-[#030408] rounded-[14px] flex items-center justify-center font-display font-black text-xl text-white">
+                  M
                 </div>
               </div>
               <div>
-                <span className="font-display font-black text-xl tracking-tight text-white block leading-none">Taskly™</span>
-                <span className="text-[10px] text-cyan-400 font-mono tracking-widest font-extrabold uppercase">Enterprise Portal</span>
+                <span className="font-display font-black text-xl tracking-tight text-white block leading-none">MEPCO™</span>
+                <span className="text-[10px] text-cyan-400 font-mono tracking-widest font-extrabold uppercase">IT & Operations Portal</span>
               </div>
             </div>
 
@@ -240,7 +249,7 @@ export function AuthPage() {
               <h1 className={`font-display text-3xl font-black tracking-tight leading-tight transition-colors duration-300 ${
                 dark ? 'text-white' : 'text-slate-900'
               }`}>
-                Log In to Taskly™
+                Log In to MEPCO™
               </h1>
             </div>
             

@@ -138,14 +138,25 @@ function DashboardLayout({ children }) {
         {/* Brand Logo */}
         <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-500 flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform">
-              T
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-white p-1 shadow-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+              <img 
+                src="https://mepcobill.pk/wp-content/uploads/2023/12/mepco-logo.png" 
+                alt="MEPCO Logo" 
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div style={{ display: 'none' }} className="w-full h-full bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-500 flex items-center justify-center text-white font-extrabold text-lg">
+                M
+              </div>
             </div>
             <div>
               <h1 className="font-display text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
-                Taskly <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                MEPCO <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
               </h1>
-              <span className="text-[10px] text-slate-400 font-mono tracking-wider block -mt-0.5">ENTERPRISE</span>
+              <span className="text-[10px] text-slate-400 font-mono tracking-wider block -mt-0.5">PORTAL</span>
             </div>
           </Link>
           <button

@@ -118,7 +118,7 @@ function Settings() {
             </div>
             <div className="flex items-center justify-between py-2.5">
               <span className="font-bold text-ink">System Version</span>
-              <span className="text-xs font-mono text-indigo-500 font-bold bg-indigo-500/10 px-2.5 py-0.5 rounded-full">Taskly v2.4 Enterprise</span>
+              <span className="text-xs font-mono text-indigo-500 font-bold bg-indigo-500/10 px-2.5 py-0.5 rounded-full">MEPCO Portal v2.0</span>
             </div>
           </div>
         </motion.div>

@@ -29,7 +29,7 @@ export function AppLoader({ message = 'Initializing Taskly Workspace...' }) {
         {/* Brand Name & Typography */}
         <div className="flex flex-col items-center text-center gap-1.5">
           <h2 className="font-display font-extrabold text-xl tracking-tight text-white flex items-center gap-1.5">
-            Taskly <Sparkles className="w-4 h-4 text-cyan-400" />
+            MEPCO <Sparkles className="w-4 h-4 text-cyan-400" />
           </h2>
           <p className="text-xs text-slate-400 font-medium tracking-wide">
             {message}
