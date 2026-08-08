@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, User, Settings, LogOut, Bell, Search, Sun, Moon, Sparkles, Crown, UserCheck, Layers, Zap } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, User, Settings, LogOut, Bell, Search, Sun, Moon, Sparkles, Crown, UserCheck, Layers, Zap, ExternalLink } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { getNotifications, markAllRead } from '../services/notificationService'
 import api from '../services/api'
@@ -234,10 +234,11 @@ function DashboardLayout({ children }) {
               href="https://fabih.vercel.app" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold font-mono block mt-0.5 tracking-wide hover:underline cursor-pointer transition-colors"
+              className="text-[10px] text-cyan-400 hover:text-cyan-300 font-bold font-mono inline-flex items-center gap-1 justify-center mt-0.5 tracking-wide hover:underline cursor-pointer transition-colors"
               title="View Developer Portfolio"
             >
-              M.Fabih Alam Khan
+              <span>M.Fabih Alam Khan</span>
+              <ExternalLink size={9} className="opacity-75" />
             </a>
           </div>
         </div>
