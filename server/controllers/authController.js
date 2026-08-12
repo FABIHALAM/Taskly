@@ -17,7 +17,7 @@ const generateAccessToken = (userId) =>
  * Stored in the DB so it can be invalidated on logout.
  */
 const generateRefreshToken = (userId) =>
-  jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' })
+  jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, { expiresIn: '7d' })
 
 // ─── Controllers ─────────────────────────────────────────────────────────────
 
@@ -162,7 +162,7 @@ const refreshAccessToken = async (req, res) => {
     // Verify the token signature and expiry
     let decoded
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET)
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET)
     } catch {
       return sendError(res, 403, 'Invalid or expired refresh token')
     }
