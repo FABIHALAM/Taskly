@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MEPCO Portal - Installation & Deployment Documentation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #fdfdfd;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+        /* Cover Page Styling */
+        .cover-page {
+            text-align: center;
+            padding: 60px 20px;
+            border-bottom: 2px solid #0056b3;
+            margin-bottom: 40px;
+        }
+        .logo-container {
+            margin-bottom: 20px;
+        }
+        .logo-container img {
+            width: 120px;
+            height: 120px;
+            object-contain: fit;
+        }
+        .project-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #0b0e25;
+            margin: 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .project-subtitle {
+            font-size: 18px;
+            color: #06b6d4;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        .meta-info {
+            margin-top: 40px;
+            font-size: 14px;
+            color: #555555;
+            line-height: 1.8;
+        }
+        .meta-info strong {
+            color: #111111;
+        }
+        /* Document Headings */
+        h2 {
+            color: #0b0e25;
+            border-bottom: 2px solid #06b6d4;
+            padding-pb: 8px;
+            margin-top: 40px;
+            font-size: 22px;
+            text-transform: uppercase;
+        }
+        h3 {
+            color: #0056b3;
+            font-size: 18px;
+            margin-top: 25px;
+        }
+        p, li {
+            font-size: 15px;
+            color: #444444;
+        }
+        ul, ol {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        /* Code Blocks */
+        pre {
+            background-color: #f4f6f9;
+            border-left: 4px solid #06b6d4;
+            padding: 15px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            border-radius: 4px;
+            color: #2c3e50;
+        }
+        code {
+            font-family: 'Consolas', monospace;
+            background-color: #f4f6f9;
+            padding: 2px 6px;
+            font-size: 13px;
+            border-radius: 4px;
+            color: #c7254e;
+        }
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        th {
+            background-color: #0b0e25;
+            color: #ffffff;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        /* Alert Info Boxes */
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #0056b3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- COVER PAGE -->
+    <div class="cover-page">
+        <div class="logo-container">
+            <!-- Embedding local logo dynamically as fallback if needed -->
+            <img src="client/public/mepco-logo.png" alt="MEPCO Logo" onerror="this.src='https://mepcobill.pk/wp-content/uploads/2023/12/mepco-logo.png'">
+        </div>
+        <div class="project-title">MEPCO Portal</div>
+        <div class="project-subtitle">IT & Grid Operations Management System</div>
+        
+        <div class="meta-info">
+            <strong>Organization:</strong> Multan Electric Power Company (MEPCO)<br>
+            <strong>Division:</strong> IT & Grid Operations Control Division<br>
+            <strong>Project Role:</strong> Intern Project Submission<br>
+            <strong>Developer:</strong> M.Fabih Alam Khan (Portfolio: <a href="https://fabih.vercel.app" target="_blank">fabih.vercel.app</a>)<br>
+            <strong>Date of Submission:</strong> August 13, 2026
+        </div>
+    </div>
+
+    <!-- TABLE OF CONTENTS -->
+    <h2>1. Executive Summary</h2>
+    <p>
+        The <strong>MEPCO Portal</strong> is a dynamic, high-performance IT and Grid Operations Management System customized specifically for the <strong>Multan Electric Power Company (MEPCO)</strong>. 
+        Designed as an enterprise solution, it streamlines Scrum sprint management, drag-and-drop Kanban task boards, real-world grid telemetry status logging, and role-based user management for sub-divisional IT engineers.
+    </p>
+
+    <h2>2. System Prerequisites</h2>
+    <p>To run the MEPCO Portal locally, ensure the following software is installed on the hosting computer:</p>
+    <ul>
+        <li><strong>Node.js</strong> (v18.x or above)</li>
+        <li><strong>MongoDB</strong> (Local MongoDB Compass instance or MongoDB Atlas cloud cluster)</li>
+        <li><strong>NPM</strong> (Node Package Manager - comes bundled with Node.js)</li>
+    </ul>
+
+    <h2>3. Project Repository Structure</h2>
+    <p>The codebase is modularly separated into two main directories:</p>
+    <ul>
+        <li><code>client/</code>: React frontend application styled using premium Vanilla CSS and Vite compiler.</li>
+        <li><code>server/</code>: Express and Mongoose backend server representing REST APIs and Swagger documentation.</li>
+    </ul>
+
+    <h2>4. Local Machine Installation & Setup</h2>
+    <p>Follow these step-by-step instructions to run the application locally:</p>
+    
+    <h3>Step A: Environment Configuration</h3>
+    <p>1. Open the <code>server/</code> folder. Copy <code>.env.example</code> and rename it to <code>.env</code>. Update the following values:</p>
+    <pre>PORT=5000
+MONGO_URI=mongodb://127.0.0.1:27017/mepco
+JWT_SECRET=mepco_jwt_encryption_secret_key_2026</pre>
+    
+    <p>2. Open the <code>client/</code> folder. Copy <code>.env.example</code> and rename it to <code>.env</code>:</p>
+    <pre>VITE_API_URL=http://localhost:5000/api</pre>
+
+    <h3>Step B: Install Dependencies & Run Database Seed</h3>
+    <p>Open your command line/terminal, switch to the project folder, and run the following setup commands:</p>
+    <pre># 1. Install Server Dependencies & Seed MEPCO data
+cd server
+npm install
+npm run seed
+
+# 2. Install Client Dependencies
+cd ../client
+npm install</pre>
+    
+    <div class="info-box">
+        <strong>Note on Seeding:</strong> The <code>npm run seed</code> command wipes any local collection and dynamically generates official MEPCO test records: active grid telemetry boards, billing projects, and subdivisional employee roles.
+    </div>
+
+    <h3>Step C: Start Local Servers</h3>
+    <p>Launch the application using two separate terminal windows:</p>
+    <pre># Run in Server terminal
+cd server
+npm run dev
+
+# Run in Client terminal
+cd client
+npm run dev</pre>
+    <p>Access the portal in your browser at: <strong><code>http://localhost:5173</code></strong></p>
+
+    <h2>5. Cloud Production Deployment</h2>
+    <p>The system is verified and hosted live in production environment using Vercel serverless functions:</p>
+
+    <h3>Backend (API Server on Vercel Node Runtime)</h3>
+    <ul>
+        <li><strong>Deploy Platform:</strong> Vercel (imported using <code>server</code> as root directory)</li>
+        <li><strong>Serverless Routing:</strong> Handled dynamically via root <code>server/vercel.json</code> config.</li>
+        <li><strong>Production Live API Endpoint:</strong> <code>https://taskly-three-cyan.vercel.app/api</code></li>
+    </ul>
+
+    <h3>Frontend (React Client on Vercel Edge Network)</h3>
+    <ul>
+        <li><strong>Deploy Platform:</strong> Vercel (imported using <code>client</code> as root directory)</li>
+        <li><strong>Single Page Application Rewrites:</strong> Configured in <code>client/vercel.json</code> to prevent 404 routing errors on page refresh.</li>
+        <li><strong>Production Live App URL:</strong> <a href="https://taskly-c9re.vercel.app/login" target="_blank">https://taskly-c9re.vercel.app/login</a></li>
+    </ul>
+
+    <h2>6. Seeded Testing Credentials</h2>
+    <p>Use the following pre-configured credentials to login and evaluate the system workflows:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>System Role</th>
+                <th>Testing Email</th>
+                <th>Authentication Password</th>
+                <th>Dashboard Capabilities</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Super Admin</strong></td>
+                <td><code>admin@mepco.com</code></td>
+                <td><code>password123</code></td>
+                <td>Manage user accounts, view active logs, delete/suspend profiles.</td>
+            </tr>
+            <tr>
+                <td><strong>Project Manager</strong></td>
+                <td><code>asif@mepco.com</code></td>
+                <td><code>password123</code></td>
+                <td>Create billing/grid projects, plan Scrum sprints, assign tasks.</td>
+            </tr>
+            <tr>
+                <td><strong>Subdivisional Engineer</strong></td>
+                <td><code>fariha@mepco.com</code></td>
+                <td><code>password123</code></td>
+                <td>Drag-and-drop Kanban task state, log hours, record voice logs.</td>
+            </tr>
+            <tr>
+                <td><strong>IT Developer</strong></td>
+                <td><code>yasir@mepco.com</code></td>
+                <td><code>password123</code></td>
+                <td>Update task statuses, assign comments, review system notifications.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="info-box">
+        <strong>Security Notice:</strong> All connection routes are secured with JSON Web Token (JWT) request headers. Production environment secrets are safely managed inside encrypted Vercel Cloud settings.
+    </div>
+
+</div>
+
+</body>
+</html>
