@@ -24,7 +24,7 @@ const triggerTaskAssignedEmail = async (managerUserId, assigneeUserId, taskTitle
         projectName: project?.name || 'Project',
         priority: priority || 'Medium',
         dueDate,
-        taskUrl: `http://localhost:5173/projects/${projectId}/tasks/${taskId}`,
+        taskUrl: `${process.env.CLIENT_URL || 'http://localhost:5173'}/projects/${projectId}/tasks/${taskId}`,
       })
     }
   } catch (err) {

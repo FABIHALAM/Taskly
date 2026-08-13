@@ -94,7 +94,7 @@ const createUserAdmin = async (req, res) => {
       name: newUser.name,
       role: newUser.role,
       temporaryPassword: tempPassword,
-      loginUrl: 'http://localhost:5173/login',
+      loginUrl: `${process.env.CLIENT_URL || 'http://localhost:5173'}/login`,
     })
 
     return sendSuccess(res, 201, 'User account provisioned and credentials sent to Gmail!', {
